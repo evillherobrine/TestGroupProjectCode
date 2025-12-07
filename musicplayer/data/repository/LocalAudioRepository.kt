@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import com.example.musicplayer.domain.model.Song
+import androidx.core.net.toUri
 
 class LocalAudioRepository(private val context: Context) {
     fun getLocalAudio(): List<Song> {
@@ -42,7 +43,7 @@ class LocalAudioRepository(private val context: Context) {
                 val duration = cursor.getLong(durationColumn)
                 val albumId = cursor.getLong(albumIdColumn)
                 val contentUri: Uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,id)
-                val artworkUri = Uri.parse("content://media/external/audio/albumart")
+                val artworkUri = "content://media/external/audio/albumart".toUri()
                 val albumArtUri = ContentUris.withAppendedId(artworkUri, albumId).toString()
                 audioList.add(
                     Song(

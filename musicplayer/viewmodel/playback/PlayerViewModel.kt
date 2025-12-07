@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.util.UnstableApi
 import com.example.musicplayer.MusicService
 import com.example.musicplayer.data.repository.FavoriteRepositoryImpl
 import com.example.musicplayer.data.repository.QueueRepositoryImpl
@@ -17,7 +18,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.CancellationException
-
+@UnstableApi
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableLiveData(PlayerUiState())
     val uiState: LiveData<PlayerUiState> = _uiState
@@ -88,6 +89,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 when (value) {
                     is Long -> putExtra(key, value)
                     is String -> putExtra(key, value)
+                    is Boolean -> putExtra(key, value)
                 }
             }
         }
@@ -109,7 +111,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         "ARTIST" to playableSong.artist,
                         "COVER" to (playableSong.cover ?: ""),
                         "COVER_XL" to (playableSong.coverXL ?: ""),
-                        MusicService.EXTRA_SONG_ID to playableSong.id
+                        MusicService.EXTRA_SONG_ID to playableSong.id,
+                        MusicService.EXTRA_IS_LOCAL to playableSong.isLocal
                     ))
                 }
             } catch (e: Exception) {
@@ -136,7 +139,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     "ARTIST" to playableSong.artist,
                     "COVER" to (playableSong.cover ?: ""),
                     "COVER_XL" to (playableSong.coverXL ?: ""),
-                    MusicService.EXTRA_SONG_ID to playableSong.id
+                    MusicService.EXTRA_SONG_ID to playableSong.id,
+                    MusicService.EXTRA_IS_LOCAL to playableSong.isLocal
                 ))
             } catch (e: Exception) {
                 if (e is CancellationException) throw e

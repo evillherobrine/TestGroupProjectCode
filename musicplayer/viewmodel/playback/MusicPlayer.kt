@@ -12,6 +12,7 @@ import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import com.example.musicplayer.cache.MusicCache
 
 @UnstableApi
@@ -46,19 +47,34 @@ class MusicPlayer(context: Context) {
         get() = exoPlayer.bufferedPosition
     fun play(url: String, cacheKey: String? = null) {
         stop()
-        val mediaItemBuilder = MediaItem.Builder()
-            .setUri(url.toUri())
-        if (!cacheKey.isNullOrEmpty()) {
-            mediaItemBuilder.setCustomCacheKey(cacheKey)
+        val uri = url.toUri()
+        val isLocal = uri.scheme == "content" || uri.scheme == "file" || uri.scheme == "android.resource"
+        if (isLocal) {
+            val mediaSource = ProgressiveMediaSource.Factory(upstreamDataSourceFactory)
+                .createMediaSource(MediaItem.fromUri(uri))
+            exoPlayer.setMediaSource(mediaSource)
+        } else {
+            val mediaItemBuilder = MediaItem.Builder().setUri(uri)
+            if (!cacheKey.isNullOrEmpty()) {
+                mediaItemBuilder.setCustomCacheKey(cacheKey)
+            }
+            exoPlayer.setMediaItem(mediaItemBuilder.build())
         }
-        exoPlayer.setMediaItem(mediaItemBuilder.build())
         exoPlayer.playWhenReady = true
         exoPlayer.prepare()
     }
     fun prepare(url: String) {
         stop()
-        val mediaItem = MediaItem.fromUri(url.toUri())
-        exoPlayer.setMediaItem(mediaItem)
+        val uri = url.toUri()
+        val isLocal = uri.scheme == "content" || uri.scheme == "file" || uri.scheme == "android.resource"
+        if (isLocal) {
+            val mediaSource = ProgressiveMediaSource.Factory(upstreamDataSourceFactory)
+                .createMediaSource(MediaItem.fromUri(uri))
+            exoPlayer.setMediaSource(mediaSource)
+        } else {
+            val mediaItem = MediaItem.fromUri(uri)
+            exoPlayer.setMediaItem(mediaItem)
+        }
         exoPlayer.playWhenReady = false
         exoPlayer.prepare()
     }

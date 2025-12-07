@@ -88,6 +88,7 @@ class MusicService : MediaBrowserServiceCompat() {
         const val KEY_LAST_SONG_COVER_XL = "LAST_SONG_COVER_XL"
         const val KEY_LAST_SONG_ID = "LAST_SONG_ID"
         const val EXTRA_SONG_ID = "EXTRA_SONG_ID"
+        const val EXTRA_IS_LOCAL = "EXTRA_IS_LOCAL"
     }
 
     @OptIn(UnstableApi::class)
@@ -211,7 +212,8 @@ class MusicService : MediaBrowserServiceCompat() {
             artist = intent.getStringExtra("ARTIST") ?: "",
             url = url,
             cover = intent.getStringExtra("COVER") ?: "",
-            coverXL = intent.getStringExtra("COVER_XL") ?: ""
+            coverXL = intent.getStringExtra("COVER_XL") ?: "",
+            isLocal = intent.getBooleanExtra(EXTRA_IS_LOCAL, false)
         )
         serviceScope.launch { playSong(song) }
     }

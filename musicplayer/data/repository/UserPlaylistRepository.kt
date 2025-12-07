@@ -33,7 +33,8 @@ class UserPlaylistRepository(context: Context) {
                 coverXL = song.coverXL,
                 url = song.url,
                 duration = song.duration,
-                isFavorite = false
+                isFavorite = false,
+                isLocal = song.isLocal
             )
             favouriteDao.insert(localSong)
         }
@@ -69,5 +70,4 @@ class UserPlaylistRepository(context: Context) {
         val favSongs = songs.map { it.toFavouriteSong().copy(isFavorite = false) }
         playlistDao.addSongsToPlaylistBatch(newPlaylistId, favSongs)
     }
-
 }
