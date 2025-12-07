@@ -66,13 +66,8 @@ class UserPlaylistRepository(context: Context) {
     }
     suspend fun saveOnlinePlaylist(name: String, songs: List<Song>) {
         val newPlaylistId = playlistDao.insertPlaylist(UserPlaylist(name = name))
-        songs.forEachIndexed { index, song ->
-            val localSong = song.toFavouriteSong().copy(isFavorite = false)
-            playlistDao.insertSongIfNotExists(localSong)
-            playlistDao.insertPlaylistSongCrossRef(
-                PlaylistSongCrossRef(playlistId = newPlaylistId, id = song.id, orderIndex = index)
-            )
-        }
+        val favSongs = songs.map { it.toFavouriteSong().copy(isFavorite = false) }
+        playlistDao.addSongsToPlaylistBatch(newPlaylistId, favSongs)
     }
 
 }

@@ -1,5 +1,6 @@
 package com.example.musicplayer
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -10,10 +11,13 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.C
+import androidx.media3.common.util.UnstableApi
 import coil.imageLoader
 import coil.request.Disposable
 import coil.request.ImageRequest
 import com.example.musicplayer.viewmodel.playback.MusicPlayer
+
+@UnstableApi
 class MusicNotificationManager(private val service: MusicService, private val musicPlayer: MusicPlayer) {
     private val channelId = "music_channel_id"
     internal val notificationId = 1
@@ -56,7 +60,7 @@ class MusicNotificationManager(private val service: MusicService, private val mu
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
-    fun updateNotification(mediaSession: MediaSessionCompat, isFavorite: Boolean) {
+    private fun createNotificationBuilder(mediaSession: MediaSessionCompat, isFavorite: Boolean): NotificationCompat.Builder {
         val isPlaying = musicPlayer.isPlaying
         val title = service.currentTitle.ifEmpty { "Unknown Title" }
         val artist = service.currentArtist.ifEmpty { "Unknown Artist" }
@@ -81,24 +85,15 @@ class MusicNotificationManager(private val service: MusicService, private val mu
             .addAction(R.drawable.skip_next_24px, "Next", nextIntent)
             .addAction(favoriteIcon, "Favorite", favoriteIntent)
         currentCoverBitmap?.let { builder.setLargeIcon(it) }
-        notificationManager.notify(notificationId, builder.build())
+
+        return builder
     }
-    fun buildNotification(mediaSession: MediaSessionCompat): android.app.Notification {
-        val isPlaying = musicPlayer.isPlaying
-        val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
-            .setMediaSession(mediaSession.sessionToken)
-            .setShowActionsInCompactView(0, 1, 2)
-        val builder = NotificationCompat.Builder(service, channelId)
-            .setContentTitle(service.currentTitle)
-            .setContentText(service.currentArtist)
-            .setSmallIcon(R.drawable.music_note_24px)
-            .setStyle(mediaStyle)
-            .setContentIntent(contentIntent)
-            .addAction(R.drawable.skip_previous_24px, "Previous", prevIntent)
-            .addAction(if (isPlaying) R.drawable.pause_24px else R.drawable.play, "Play", playIntent)
-            .addAction(R.drawable.skip_next_24px, "Next", nextIntent)
-        currentCoverBitmap?.let { builder.setLargeIcon(it) }
-        return builder.build()
+    fun buildNotification(mediaSession: MediaSessionCompat): Notification {
+        return createNotificationBuilder(mediaSession, service.isCurrentSongFavorite).build()
+    }
+    fun updateNotification(mediaSession: MediaSessionCompat, isFavorite: Boolean) {
+        val builder = createNotificationBuilder(mediaSession, isFavorite)
+        notificationManager.notify(notificationId, builder.build())
     }
     fun loadCoverArt(coverUrl: String) {
         disposable?.dispose()
@@ -106,14 +101,15 @@ class MusicNotificationManager(private val service: MusicService, private val mu
         if (coverUrl.isNotBlank()) {
             val request = ImageRequest.Builder(service)
                 .data(coverUrl)
-                .allowHardware(false).size(256,256)
+                .allowHardware(false)
+                .size(256, 256)
                 .target(
                     onSuccess = { result ->
                         currentCoverBitmap = (result as? BitmapDrawable)?.bitmap
                         updateMediaMetadata()
                         service.triggerNotificationUpdate()
                     },
-                    onError = { _ ->
+                    onError = {
                         currentCoverBitmap = null
                         updateMediaMetadata()
                         service.triggerNotificationUpdate()

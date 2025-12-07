@@ -8,6 +8,7 @@ import com.example.musicplayer.data.api.BaseSearchPagingSource
 import com.example.musicplayer.data.api.RetrofitClient
 import com.example.musicplayer.domain.model.Playlist
 import com.example.musicplayer.domain.model.Song
+import com.example.musicplayer.domain.model.toSong
 import com.example.musicplayer.domain.repository.SearchRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -30,17 +31,7 @@ class SearchRepositoryImpl : SearchRepository {
             pagingSourceFactory = { BaseSearchPagingSource(query, api::searchTrack) }
         ).flow.map { pagingData ->
             pagingData.map { item ->
-                val largeArtworkUrl = item.artwork_url?.replace("-large.jpg", "-t500x500.jpg") ?: ""
-                Song(
-                    id = item.id,
-                    title = item.title,
-                    url = "",
-                    artist = item.metadata_artist?.takeIf { it.isNotBlank() } ?: item.user.username.ifEmpty { item.user.full_name.ifEmpty { "Unknown" } },
-                    cover = item.artwork_url,
-                    coverXL = largeArtworkUrl,
-                    duration = item.duration.toLong(),
-                    lastFetchTime = 0L
-                )
+                item.toSong()
             }
         }
     }

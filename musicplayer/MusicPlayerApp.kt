@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 
 class MusicPlayerApp : Application(), DefaultLifecycleObserver {
     private val appScope = CoroutineScope(Dispatchers.IO)
-
     override fun onCreate() {
         super<Application>.onCreate()
         QueueRepositoryImpl.initialize(this)

@@ -108,8 +108,7 @@ fun PlayerScaffold(
                             onToggleRepeat = onToggleRepeat,
                             onShowQueue = onShowQueue,
                             onShowSleepTimer = onShowSleepTimer,
-                            onShowSongOptions = { onShowSongOptions(playerState.currentSong) },
-                            onSongSwipe = onSongSwipe
+                            onShowSongOptions = { onShowSongOptions(playerState.currentSong) }
                         )
                     }
                 }
@@ -129,7 +128,6 @@ fun PlayerScaffold(
                             onMiniPlayerClick = {
                                 scope.launch { scaffoldState.bottomSheetState.expand() }
                             },
-                            onSongSwipe = onSongSwipe,
                             modifier = Modifier.height(MiniPlayerHeight)
                         )
                     }

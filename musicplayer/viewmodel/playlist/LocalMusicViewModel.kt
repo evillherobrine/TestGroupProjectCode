@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.repository.LocalAudioRepository
 import com.example.musicplayer.domain.model.Song
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +31,6 @@ class LocalMusicViewModel(application: Application) : AndroidViewModel(applicati
     private fun loadLocalMusic() {
         viewModelScope.launch {
             _isLoading.value = true
-            delay(500)
             val result = withContext(Dispatchers.IO) {
                 repository.getLocalAudio()
             }

@@ -10,12 +10,12 @@ import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.Transaction
 import androidx.room.Update
+import com.example.musicplayer.domain.model.Song
 import kotlinx.coroutines.flow.Flow
 
 data class PlaylistWithSongs(
     @Embedded
     val playlist: UserPlaylist,
-
     @Relation(
         parentColumn = "playlistId",
         entityColumn = "id",
@@ -23,7 +23,6 @@ data class PlaylistWithSongs(
     )
     val songs: List<FavouriteSong>
 )
-
 @Dao
 interface PlaylistDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -53,8 +52,7 @@ interface PlaylistDao {
     @Query("UPDATE user_playlists SET name = :name WHERE playlistId = :playlistId")
     suspend fun updatePlaylistName(playlistId: Long, name: String)
     @Query("""
-        SELECT f.* 
-        FROM favourite_songs f
+        SELECT f.* FROM favourite_songs f
         INNER JOIN playlist_song_join j ON f.id = j.id
         WHERE j.playlistId = :playlistId
         ORDER BY j.orderIndex ASC
@@ -66,4 +64,26 @@ interface PlaylistDao {
     suspend fun updateCrossRefs(crossRefs: List<PlaylistSongCrossRef>)
     @Query("SELECT MAX(orderIndex) FROM playlist_song_join WHERE playlistId = :playlistId")
     suspend fun getMaxOrderIndex(playlistId: Long): Int?
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertPlaylistSongCrossRefs(crossRefs: List<PlaylistSongCrossRef>)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertSongsIfNotExists(songs: List<FavouriteSong>)
+    @Transaction
+    suspend fun addSongsToPlaylist(playlistId: Long, songs: List<Song>) {
+        val favSongs = songs.map { it.toFavouriteSong().copy(isFavorite = false) }
+        addSongsToPlaylistBatch(playlistId, favSongs)
+    }
+    @Transaction
+    suspend fun addSongsToPlaylistBatch(playlistId: Long, songs: List<FavouriteSong>) {
+        insertSongsIfNotExists(songs)
+        val currentMaxOrder = getMaxOrderIndex(playlistId) ?: -1
+        val crossRefs = songs.mapIndexed { index, song ->
+            PlaylistSongCrossRef(
+                playlistId = playlistId,
+                id = song.id,
+                orderIndex = currentMaxOrder + 1 + index
+            )
+        }
+        insertPlaylistSongCrossRefs(crossRefs)
+    }
 }

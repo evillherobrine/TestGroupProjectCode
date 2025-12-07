@@ -6,13 +6,34 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import com.example.musicplayer.cache.MusicCache
 
+@UnstableApi
 class MusicPlayer(context: Context) {
-    internal val exoPlayer: ExoPlayer = run {
-        val audioAttributes = AudioAttributes.Builder().setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).setUsage(C.USAGE_MEDIA).build()
-        ExoPlayer.Builder(context).setAudioAttributes(audioAttributes,true).setHandleAudioBecomingNoisy(true).build()
-    }
+    private val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+        .setAllowCrossProtocolRedirects(true)
+    private val upstreamDataSourceFactory = DefaultDataSource.Factory(context, httpDataSourceFactory)
+    private val cacheDataSourceFactory = CacheDataSource.Factory()
+        .setCache(MusicCache.get(context))
+        .setUpstreamDataSourceFactory(upstreamDataSourceFactory)
+        .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+    internal val exoPlayer: ExoPlayer = ExoPlayer.Builder(context)
+        .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(cacheDataSourceFactory))
+        .setAudioAttributes(
+            AudioAttributes.Builder()
+                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                .setUsage(C.USAGE_MEDIA)
+                .build(),
+            true
+        )
+        .setHandleAudioBecomingNoisy(true)
+        .build()
     val isPlaying: Boolean
         get() = exoPlayer.isPlaying
     val isRepeating: Boolean
@@ -23,13 +44,19 @@ class MusicPlayer(context: Context) {
         get() = exoPlayer.duration
     val bufferedPosition: Long
         get() = exoPlayer.bufferedPosition
-    fun play(url: String) {
-        val mediaItem = MediaItem.fromUri(url.toUri())
-        exoPlayer.setMediaItem(mediaItem)
+    fun play(url: String, cacheKey: String? = null) {
+        stop()
+        val mediaItemBuilder = MediaItem.Builder()
+            .setUri(url.toUri())
+        if (!cacheKey.isNullOrEmpty()) {
+            mediaItemBuilder.setCustomCacheKey(cacheKey)
+        }
+        exoPlayer.setMediaItem(mediaItemBuilder.build())
         exoPlayer.playWhenReady = true
         exoPlayer.prepare()
     }
     fun prepare(url: String) {
+        stop()
         val mediaItem = MediaItem.fromUri(url.toUri())
         exoPlayer.setMediaItem(mediaItem)
         exoPlayer.playWhenReady = false
@@ -71,5 +98,9 @@ class MusicPlayer(context: Context) {
     }
     fun stop(){
         exoPlayer.stop()
+        exoPlayer.clearMediaItems()
+    }
+    fun clearMediaItems() {
+        exoPlayer.clearMediaItems()
     }
 }
