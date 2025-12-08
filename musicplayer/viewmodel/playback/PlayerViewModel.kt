@@ -3,8 +3,6 @@ package com.example.musicplayer.viewmodel.playback
 import android.app.Application
 import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import com.example.musicplayer.MusicService
@@ -14,14 +12,19 @@ import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.domain.repository.MusicStateRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.CancellationException
+
 @UnstableApi
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
-    private val _uiState = MutableLiveData(PlayerUiState())
-    val uiState: LiveData<PlayerUiState> = _uiState
+    private val _uiState = MutableStateFlow(PlayerUiState())
+    val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
     private val favoriteRepository = FavoriteRepositoryImpl(application)
     private var playJob: Job? = null
     private var timerJob: Job? = null
@@ -77,7 +80,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     sleepTimerInMillis = _uiState.value?.sleepTimerInMillis
                 )
             }.collect { newState ->
-                _uiState.postValue(newState)
+                _uiState.value = newState
             }
         }
     }
@@ -160,7 +163,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         if (prevSong != null) playSong(prevSong)
     }
     fun seekTo(position: Long) {
-        _uiState.value = _uiState.value?.copy(position = position)
+        _uiState.update { it.copy(position = position) }
         sendMusicCommand(MusicService.SEEK_TO, mapOf("SEEK_TO" to position))
     }
     fun setSleepTimer(durationMs: Long) {
@@ -175,7 +178,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private fun startUiCountdown(durationMs: Long) {
         timerJob?.cancel()
         if (durationMs <= 0) {
-            _uiState.value = _uiState.value?.copy(sleepTimerInMillis = null)
+            _uiState.update { it.copy(sleepTimerInMillis = null) }
             return
         }
         timerJob = viewModelScope.launch {
@@ -183,10 +186,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             while (isActive) {
                 val remaining = endTime - System.currentTimeMillis()
                 if (remaining <= 0) {
-                    _uiState.postValue(_uiState.value?.copy(sleepTimerInMillis = null))
+                    _uiState.update { it.copy(sleepTimerInMillis = null) }
                     break
                 }
-                _uiState.postValue(_uiState.value?.copy(sleepTimerInMillis = remaining))
+                _uiState.update { it.copy(sleepTimerInMillis = remaining) }
                 delay(1000)
             }
         }

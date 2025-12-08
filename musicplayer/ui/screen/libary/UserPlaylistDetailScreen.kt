@@ -4,45 +4,15 @@ import android.app.Application
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.SelectAll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -50,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.UnstableApi
 import com.example.musicplayer.domain.model.Playlist
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.ui.screen.search.TrackItem
@@ -60,8 +31,9 @@ import kotlinx.coroutines.delay
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
+@Suppress("AssignedValueIsNeverRead")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
-@Composable
+@Composable@UnstableApi
 fun UserPlaylistDetailScreen(
     playlistId: Long,
     playlistName: String,
@@ -81,17 +53,18 @@ fun UserPlaylistDetailScreen(
     val selectedSongIds = remember { mutableStateListOf<Long>() }
     val songsState = if (playlistId == Playlist.FAVOURITES_PLAYLIST_ID) {
         val favoritesViewModel: FavoritesViewModel = viewModel()
-        favoritesViewModel.favoriteSongs.observeAsState(initial = emptyList())
+        favoritesViewModel.favoriteSongs.collectAsState()
     } else {
         val context = LocalContext.current.applicationContext as Application
         localPlaylistViewModel = viewModel(
             factory = LocalPlaylistViewModel.Factory(context, playlistId)
         )
-        val playlistInfo by localPlaylistViewModel.playlist.observeAsState()
+        val playlistInfo by localPlaylistViewModel.playlist.collectAsState()
+
         if (playlistInfo?.playlist?.name != null) {
             currentName = playlistInfo!!.playlist.name
         }
-        localPlaylistViewModel.songs.observeAsState(initial = emptyList())
+        localPlaylistViewModel.songs.collectAsState()
     }
     val dbSongs = songsState.value
     var uiSongs by remember { mutableStateOf(dbSongs) }

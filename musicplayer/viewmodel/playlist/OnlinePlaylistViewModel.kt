@@ -1,12 +1,13 @@
 package com.example.musicplayer.viewmodel.playlist
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.api.RetrofitClient
 import com.example.musicplayer.data.api.SoundCloudResponseItem
 import com.example.musicplayer.domain.model.Song
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 sealed class PlaylistDetailState {
@@ -14,9 +15,11 @@ sealed class PlaylistDetailState {
     data class Success(val songs: List<Song>) : PlaylistDetailState()
     data class Error(val message: String) : PlaylistDetailState()
 }
+
 class OnlinePlaylistViewModel : ViewModel() {
-    private val _playlistState = MutableLiveData<PlaylistDetailState>()
-    val playlistState: LiveData<PlaylistDetailState> = _playlistState
+    private val _playlistState = MutableStateFlow<PlaylistDetailState>(PlaylistDetailState.Loading)
+    val playlistState: StateFlow<PlaylistDetailState> = _playlistState.asStateFlow()
+
     fun fetchPlaylistTracks(playlistId: Long) {
         _playlistState.value = PlaylistDetailState.Loading
         viewModelScope.launch {
@@ -25,9 +28,7 @@ class OnlinePlaylistViewModel : ViewModel() {
                 val mappedSongs = tracks.map { item ->
                     mapToSong(item)
                 }
-
                 _playlistState.value = PlaylistDetailState.Success(mappedSongs)
-
             } catch (_: Exception) {
                 _playlistState.value = PlaylistDetailState.Error("Can't load track list")
             }

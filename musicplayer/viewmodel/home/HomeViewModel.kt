@@ -2,17 +2,18 @@ package com.example.musicplayer.viewmodel.home
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.api.BatchSearchRequest
 import com.example.musicplayer.data.api.RetrofitClient
-import com.example.musicplayer.domain.model.toSong
 import com.example.musicplayer.data.repository.SearchHistoryRepository
 import com.example.musicplayer.domain.model.Playlist
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.domain.model.toPlaylist
+import com.example.musicplayer.domain.model.toSong
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 
@@ -20,17 +21,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val historyRepository = SearchHistoryRepository(application)
     private val api = RetrofitClient.api
     private val defaultKeywords = listOf("#Song", "#Viral", "#Popular", "#Trending", "#Pop")
-    private val _suggestedSongs = MutableLiveData<List<Song>>()
-    val suggestedSongs: LiveData<List<Song>> = _suggestedSongs
-    private val _suggestedPlaylists = MutableLiveData<List<Playlist>>()
-    val suggestedPlaylists: LiveData<List<Playlist>> = _suggestedPlaylists
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    private val _suggestedSongs = MutableStateFlow<List<Song>>(emptyList())
+    val suggestedSongs: StateFlow<List<Song>> = _suggestedSongs.asStateFlow()
+    private val _suggestedPlaylists = MutableStateFlow<List<Playlist>>(emptyList())
+    val suggestedPlaylists: StateFlow<List<Playlist>> = _suggestedPlaylists.asStateFlow()
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     init {
         loadSuggestedContent()
     }
     private fun loadSuggestedContent() {
-        if (_suggestedSongs.value.isNullOrEmpty() && _suggestedPlaylists.value.isNullOrEmpty()) {
+        if (_suggestedSongs.value.isEmpty() && _suggestedPlaylists.value.isEmpty()) {
             _isLoading.value = true
             viewModelScope.launch {
                 try {

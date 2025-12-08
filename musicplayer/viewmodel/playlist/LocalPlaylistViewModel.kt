@@ -2,17 +2,20 @@ package com.example.musicplayer.viewmodel.playlist
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.local.AppDatabase
+import com.example.musicplayer.data.local.playlist.PlaylistWithSongs
 import com.example.musicplayer.data.repository.UserPlaylistRepository
 import com.example.musicplayer.domain.model.Song
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class LocalPlaylistViewModel(
@@ -21,9 +24,14 @@ class LocalPlaylistViewModel(
 ) : AndroidViewModel(application) {
     private val playlistDao = AppDatabase.getDatabase(application).playlistDao()
     private val userPlaylistRepository = UserPlaylistRepository(application)
-    val playlist = playlistDao.getPlaylistWithSongsFlow(playlistId).asLiveData()
+    val playlist: StateFlow<PlaylistWithSongs?> = playlistDao.getPlaylistWithSongsFlow(playlistId)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
-    val songs: LiveData<List<Song>> = _songs.asLiveData()
+    val songs: StateFlow<List<Song>> = _songs.asStateFlow()
     private var dbUpdateJob: Job? = null
     private var isReordering = false
     init {

@@ -3,46 +3,12 @@ package com.example.musicplayer.ui.screen.component
 import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.LibraryMusic
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberStandardBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -52,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -61,7 +28,6 @@ import com.example.musicplayer.ui.navigation.AppNavHost
 import com.example.musicplayer.ui.screen.player.PlayerScaffold
 import com.example.musicplayer.ui.screen.player.QueueScreen
 import com.example.musicplayer.ui.screen.player.SleepTimerDialog
-import com.example.musicplayer.viewmodel.playback.PlayerUiState
 import com.example.musicplayer.viewmodel.playback.PlayerViewModel
 import com.example.musicplayer.viewmodel.search.SearchViewModel
 import kotlinx.coroutines.launch
@@ -70,18 +36,15 @@ import kotlinx.coroutines.launch
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+@UnstableApi
 fun MainScreen() {
     var showSleepTimerSheet by remember { mutableStateOf(false) }
     val sleepTimerSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
-    val scaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberStandardBottomSheetState(
-            initialValue = SheetValue.PartiallyExpanded,
-            skipHiddenState = true
-        )
-    )
+    val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = rememberStandardBottomSheetState(
+        initialValue = SheetValue.PartiallyExpanded,skipHiddenState = true))
     val hostState = remember { SnackbarHostState() }
     val showSnackbar: (String) -> Unit = { message ->
         scope.launch {
@@ -93,7 +56,7 @@ fun MainScreen() {
     var libraryScrollTrigger by remember { mutableLongStateOf(0L) }
     val playerViewModel: PlayerViewModel = viewModel()
     val searchViewModel: SearchViewModel = viewModel()
-    val playerState by playerViewModel.uiState.observeAsState(PlayerUiState())
+    val playerState by playerViewModel.uiState.collectAsState()
     var showQueueBottomSheet by remember { mutableStateOf(false) }
     val queueSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showSleepTimerDialog by remember { mutableStateOf(false) }

@@ -2,18 +2,30 @@ package com.example.musicplayer.viewmodel.playback
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.repository.QueueRepositoryImpl
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.domain.usecase.QueueUseCase
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class QueueViewModel(application: Application) : AndroidViewModel(application) {
     private val queueRepository = QueueRepositoryImpl
     private val queueUseCase = QueueUseCase(queueRepository)
-    val queue = queueUseCase.queue.asLiveData()
-    val currentSong = queueUseCase.currentSong.asLiveData()
+    val queue: StateFlow<List<Song>> = queueUseCase.queue
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+    val currentSong: StateFlow<Song?> = queueUseCase.currentSong
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
     fun add(song: Song) {
         viewModelScope.launch { queueUseCase.add(song) }
     }

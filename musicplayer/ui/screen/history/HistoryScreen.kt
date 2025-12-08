@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.ui.screen.search.TrackItem
@@ -40,7 +41,7 @@ import com.example.musicplayer.viewmodel.history.HistoryViewModel
 import com.example.musicplayer.viewmodel.playback.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
+@Composable@UnstableApi
 fun HistoryScreen(
     scaffoldPadding: PaddingValues,
     miniPlayerHeight: Dp,
