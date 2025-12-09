@@ -30,6 +30,7 @@ fun LocalDetailScreen(
     title: String,
     type: LocalDetailViewModel.DetailType,
     id: Long,
+    path: String? = null,
     playerViewModel: PlayerViewModel,
     onNavigateBack: () -> Unit,
     onShowSongOptions: (Song) -> Unit,
@@ -41,7 +42,8 @@ fun LocalDetailScreen(
         factory = LocalDetailViewModel.Factory(
             application = application,
             type = type,
-            id = id
+            id = id,
+            path = path
         )
     )
     val pagingItems = viewModel.songs.collectAsLazyPagingItems()

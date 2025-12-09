@@ -147,6 +147,11 @@ fun AppNavHost(
                     val encodedName = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
                     navController.navigate("${AppDestinations.LOCAL_ARTIST_DETAIL}/$id/$encodedName")
                 },
+                onFolderClick = { path, name ->
+                    val encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8.toString())
+                    val encodedName = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
+                    navController.navigate("${AppDestinations.LOCAL_FOLDER_DETAIL}/$encodedPath/$encodedName")
+                },
                 bottomBarPadding = totalBottomPadding,
                 scrollToTop = scrollToTopLocal
             )
@@ -256,6 +261,28 @@ fun AppNavHost(
                 title = decodedName,
                 type = LocalDetailViewModel.DetailType.ARTIST,
                 id = id,
+                playerViewModel = playerViewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onShowSongOptions = { song -> onShowSongOptions(song, null, null, null) },
+                bottomBarPadding = totalBottomPadding
+            )
+        }
+        composable(
+            route = "${AppDestinations.LOCAL_FOLDER_DETAIL}/{${AppDestinations.ARG_ID}}/{${AppDestinations.ARG_NAME}}",
+            arguments = listOf(
+                navArgument(AppDestinations.ARG_ID) { type = NavType.StringType },
+                navArgument(AppDestinations.ARG_NAME) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val pathRaw = backStackEntry.arguments?.getString(AppDestinations.ARG_ID) ?: ""
+            val nameRaw = backStackEntry.arguments?.getString(AppDestinations.ARG_NAME) ?: ""
+            val decodedPath = java.net.URLDecoder.decode(pathRaw, "UTF-8")
+            val decodedName = java.net.URLDecoder.decode(nameRaw, "UTF-8")
+            LocalDetailScreen(
+                title = decodedName,
+                type = LocalDetailViewModel.DetailType.FOLDER,
+                id = 0,
+                path = decodedPath,
                 playerViewModel = playerViewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onShowSongOptions = { song -> onShowSongOptions(song, null, null, null) },

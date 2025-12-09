@@ -17,8 +17,8 @@ class LocalDetailViewModel(
     id: Long,
     private val path: String? = null
 ) : AndroidViewModel(application) {
-    enum class DetailType { ALBUM, ARTIST, FOLDER }
     private val repository = LocalAudioRepository(application)
+    enum class DetailType { ALBUM, ARTIST, FOLDER }
     val songs: Flow<PagingData<Song>> = when (type) {
         DetailType.ALBUM -> repository.getSongsByAlbum(id)
         DetailType.ARTIST -> repository.getSongsByArtist(id)
@@ -32,7 +32,7 @@ class LocalDetailViewModel(
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return LocalDetailViewModel(application, type, id) as T
+            return LocalDetailViewModel(application, type, id, path) as T
         }
     }
 }

@@ -1,11 +1,8 @@
 package com.example.musicplayer.ui.screen.local
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -48,7 +45,7 @@ fun LocalMusicScreen(
     onShowSongOptions: (Song) -> Unit,
     onAlbumClick: (Long, String) -> Unit,
     onArtistClick: (Long, String) -> Unit,
-    onFolderClick: (String, String) -> Unit, // Callback nhận path và name
+    onFolderClick: (String, String) -> Unit,
     bottomBarPadding: Dp,
     scrollToTop: Long,
     viewModel: LocalMusicViewModel = viewModel()
@@ -57,40 +54,18 @@ fun LocalMusicScreen(
     val hasPermission by viewModel.hasPermission.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val scope = rememberCoroutineScope()
-
-    // 1. Thêm Tab "Folders"
     val tabTitles = listOf("Songs", "Albums", "Artists", "Folders")
     val pagerState = rememberPagerState(pageCount = { tabTitles.size })
-
     val permissionToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.READ_MEDIA_AUDIO
     } else {
         Manifest.permission.READ_EXTERNAL_STORAGE
     }
-
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         viewModel.updatePermissionStatus(isGranted)
     }
-
-    // 2. Launcher mở trình chọn thư mục
-    val folderPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
-        if (uri != null) {
-            // Cấp quyền đọc bền vững cho URI này để dùng lại sau này
-            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-            context.contentResolver.takePersistableUriPermission(uri, flags)
-
-            // Lấy tên thư mục để hiển thị (lấy đoạn cuối của path)
-            val folderName = uri.path?.split(":")?.lastOrNull()?.split("/")?.lastOrNull() ?: "Selected Folder"
-
-            // Chuyển sang màn hình chi tiết
-            onFolderClick(uri.toString(), folderName)
-        }
-    }
-
     LaunchedEffect(Unit) {
         val isGranted = ContextCompat.checkSelfPermission(
             context,
@@ -101,7 +76,6 @@ fun LocalMusicScreen(
             permissionLauncher.launch(permissionToRequest)
         }
     }
-
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -164,7 +138,10 @@ fun LocalMusicScreen(
                             scrollToTop = scrollToTop
                         )
                         3 -> LocalFoldersTab(
-                            onOpenFolderClick = { folderPickerLauncher.launch(null) }
+                            viewModel = viewModel,
+                            onFolderClick = onFolderClick,
+                            bottomPadding = bottomBarPadding,
+                            scrollToTop = scrollToTop
                         )
                     }
                 }

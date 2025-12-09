@@ -16,4 +16,5 @@ object AppDestinations {
     const val LOCAL_ARTIST_DETAIL = "local_artist_detail"
     const val ARG_ID = "id"
     const val ARG_NAME = "name"
+    const val LOCAL_FOLDER_DETAIL = "local_folder_detail"
 }
