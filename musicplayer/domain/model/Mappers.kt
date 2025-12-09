@@ -16,7 +16,6 @@ fun SoundCloudResponseItem.toSong(): Song {
         lastFetchTime = 0L
     )
 }
-
 fun SoundCloudPlaylist.toPlaylist(): Playlist {
     val highResCover = this.artworkUrl?.replace("-large.jpg", "-t300x300.jpg")
     return Playlist(

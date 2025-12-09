@@ -12,21 +12,19 @@ import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
 
 class LocalMusicPagingSource(
-    private val context: Context
+    private val context: Context,
+    private val sortOrder: String
 ) : PagingSource<Int, Song>() {
-
     override fun getRefreshKey(state: PagingState<Int, Song>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
             val anchorPage = state.closestPageToPosition(anchorPosition)
             anchorPage?.prevKey?.plus(1) ?: anchorPage?.nextKey?.minus(1)
         }
     }
-
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Song> {
         val page = params.key ?: 1
         val pageSize = params.loadSize
         val offset = (page - 1) * pageSize
-
         return withContext(Dispatchers.IO) {
             try {
                 val songs = mutableListOf<Song>()
@@ -35,7 +33,6 @@ class LocalMusicPagingSource(
                 } else {
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                 }
-
                 val projection = arrayOf(
                     MediaStore.Audio.Media._ID,
                     MediaStore.Audio.Media.TITLE,
@@ -44,7 +41,6 @@ class LocalMusicPagingSource(
                     MediaStore.Audio.Media.ALBUM_ID
                 )
                 val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${MediaStore.Audio.Media.DURATION} >= 30000"
-                val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
                 context.contentResolver.query(
                     collection,
                     projection,

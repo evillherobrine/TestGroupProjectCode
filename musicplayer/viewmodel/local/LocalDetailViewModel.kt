@@ -14,18 +14,21 @@ import kotlinx.coroutines.flow.Flow
 class LocalDetailViewModel(
     application: Application,
     type: DetailType,
-    id: Long
+    id: Long,
+    private val path: String? = null
 ) : AndroidViewModel(application) {
+    enum class DetailType { ALBUM, ARTIST, FOLDER }
     private val repository = LocalAudioRepository(application)
     val songs: Flow<PagingData<Song>> = when (type) {
         DetailType.ALBUM -> repository.getSongsByAlbum(id)
         DetailType.ARTIST -> repository.getSongsByArtist(id)
+        DetailType.FOLDER -> repository.getSongsByFolder(path ?: "")
     }.cachedIn(viewModelScope)
-    enum class DetailType { ALBUM, ARTIST }
     class Factory(
         private val application: Application,
         private val type: DetailType,
-        private val id: Long
+        private val id: Long = 0,
+        private val path: String? = null
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {

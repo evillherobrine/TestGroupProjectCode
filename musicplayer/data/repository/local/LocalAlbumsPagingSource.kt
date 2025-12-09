@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
 
-class LocalAlbumsPagingSource(private val context: Context) : PagingSource<Int, LocalAlbum>() {
+class LocalAlbumsPagingSource(private val context: Context,private val sortOrder: String) : PagingSource<Int, LocalAlbum>() {
     override fun getRefreshKey(state: PagingState<Int, LocalAlbum>): Int? = null
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, LocalAlbum> {
         val page = params.key ?: 0
@@ -25,7 +25,6 @@ class LocalAlbumsPagingSource(private val context: Context) : PagingSource<Int, 
                     MediaStore.Audio.Albums.ALBUM,
                     MediaStore.Audio.Albums.ARTIST
                 )
-                val sortOrder = "${MediaStore.Audio.Albums.ALBUM} ASC"
                 context.contentResolver.query(uri, projection, null, null, sortOrder)
                     ?.use { cursor ->
                         if (cursor.moveToPosition(offset)) {

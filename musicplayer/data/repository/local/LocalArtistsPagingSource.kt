@@ -8,7 +8,7 @@ import com.example.musicplayer.domain.model.LocalArtist
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class LocalArtistsPagingSource(private val context: Context) : PagingSource<Int, LocalArtist>() {
+class LocalArtistsPagingSource(private val context: Context,private val sortOrder: String) : PagingSource<Int, LocalArtist>() {
     override fun getRefreshKey(state: PagingState<Int, LocalArtist>): Int? = null
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, LocalArtist> {
         val page = params.key ?: 0
@@ -23,7 +23,6 @@ class LocalArtistsPagingSource(private val context: Context) : PagingSource<Int,
                     MediaStore.Audio.Artists.ARTIST,
                     MediaStore.Audio.Artists.NUMBER_OF_TRACKS
                 )
-                val sortOrder = "${MediaStore.Audio.Artists.ARTIST} ASC"
                 context.contentResolver.query(uri, projection, null, null, sortOrder)?.use { cursor ->
                     if (cursor.moveToPosition(offset)) {
                         do {

@@ -1,5 +1,6 @@
 package com.example.musicplayer.ui.screen.player
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -55,7 +56,6 @@ fun PlayerScaffold(
     onShowQueue: () -> Unit,
     onShowSleepTimer: () -> Unit,
     onShowSongOptions: (Song?) -> Unit,
-    onSongSwipe: (Song) -> Unit,
     content: @Composable (PaddingValues, Dp) -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -70,6 +70,9 @@ fun PlayerScaffold(
         sheetContainerColor = Color.Transparent,
         sheetPeekHeight = peekHeight,
         sheetContent = {
+            BackHandler(enabled = scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded) {
+                scope.launch { scaffoldState.bottomSheetState.partialExpand() }
+            }
             BoxWithConstraints(
                 modifier = Modifier.fillMaxSize()
             ) {
