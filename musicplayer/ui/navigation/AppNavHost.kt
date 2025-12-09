@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -21,7 +22,8 @@ import androidx.navigation.navArgument
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.ui.screen.history.HistoryScreen
 import com.example.musicplayer.ui.screen.home.HomeScreenComposable
-import com.example.musicplayer.ui.screen.libary.LocalMusicScreen
+import com.example.musicplayer.ui.screen.local.LocalDetailScreen
+import com.example.musicplayer.ui.screen.local.LocalMusicScreen
 import com.example.musicplayer.ui.screen.libary.PlaylistScreenComposable
 import com.example.musicplayer.ui.screen.libary.UserPlaylistDetailScreen
 import com.example.musicplayer.ui.screen.search.ApiPlaylistDetail
@@ -29,12 +31,13 @@ import com.example.musicplayer.ui.screen.search.SearchInputScreen
 import com.example.musicplayer.ui.screen.search.SearchResultScreen
 import com.example.musicplayer.viewmodel.history.HistoryViewModel
 import com.example.musicplayer.viewmodel.playback.PlayerViewModel
+import com.example.musicplayer.viewmodel.local.LocalDetailViewModel
 import com.example.musicplayer.viewmodel.search.SearchViewModel
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
+@Composable@UnstableApi
 fun AppNavHost(
     navController: NavHostController,
     scaffoldPadding: PaddingValues,
@@ -44,6 +47,7 @@ fun AppNavHost(
     searchViewModel: SearchViewModel,
     scrollToTopHome: Long,
     scrollToTopLibrary: Long,
+    scrollToTopLocal: Long,
     scrollToTopHistory: Long
 ) {
     val layoutDirection = LocalLayoutDirection.current
@@ -58,8 +62,7 @@ fun AppNavHost(
     fun isDetailRoute(route: String?): Boolean {
         return route?.startsWith(AppDestinations.API_PLAYLIST_DETAIL) == true ||
                 route?.startsWith(AppDestinations.USER_PLAYLIST_DETAIL) == true ||
-                route == AppDestinations.SEARCH || route == AppDestinations.HISTORY ||
-                route == AppDestinations.LOCAL_MUSIC
+                route == AppDestinations.SEARCH || route == AppDestinations.HISTORY
     }
     NavHost(
         navController = navController,
@@ -135,9 +138,17 @@ fun AppNavHost(
         composable(AppDestinations.LOCAL_MUSIC) {
             LocalMusicScreen(
                 playerViewModel = playerViewModel,
-                onNavigateBack = { navController.popBackStack() },
                 onShowSongOptions = { song -> onShowSongOptions(song, null, null, null) },
-                bottomBarPadding = totalBottomPadding
+                onAlbumClick = { id, name ->
+                    val encodedName = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
+                    navController.navigate("${AppDestinations.LOCAL_ALBUM_DETAIL}/$id/$encodedName")
+                },
+                onArtistClick = { id, name ->
+                    val encodedName = URLEncoder.encode(name, StandardCharsets.UTF_8.toString())
+                    navController.navigate("${AppDestinations.LOCAL_ARTIST_DETAIL}/$id/$encodedName")
+                },
+                bottomBarPadding = totalBottomPadding,
+                scrollToTop = scrollToTopLocal
             )
         }
         composable(AppDestinations.SEARCH) {
@@ -206,6 +217,48 @@ fun AppNavHost(
                 playerViewModel = playerViewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onShowSongOptions = { song, onStartSelection -> onShowSongOptions(song, null, id, onStartSelection) },
+                bottomBarPadding = totalBottomPadding
+            )
+        }
+        composable(
+            route = "${AppDestinations.LOCAL_ALBUM_DETAIL}/{${AppDestinations.ARG_ID}}/{${AppDestinations.ARG_NAME}}",
+            arguments = listOf(
+                navArgument(AppDestinations.ARG_ID) { type = NavType.LongType },
+                navArgument(AppDestinations.ARG_NAME) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong(AppDestinations.ARG_ID) ?: 0L
+            val name = backStackEntry.arguments?.getString(AppDestinations.ARG_NAME) ?: ""
+            val decodedName = java.net.URLDecoder.decode(name, "UTF-8")
+
+            LocalDetailScreen(
+                title = decodedName,
+                type = LocalDetailViewModel.DetailType.ALBUM,
+                id = id,
+                playerViewModel = playerViewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onShowSongOptions = { song -> onShowSongOptions(song, null, null, null) },
+                bottomBarPadding = totalBottomPadding
+            )
+        }
+        composable(
+            route = "${AppDestinations.LOCAL_ARTIST_DETAIL}/{${AppDestinations.ARG_ID}}/{${AppDestinations.ARG_NAME}}",
+            arguments = listOf(
+                navArgument(AppDestinations.ARG_ID) { type = NavType.LongType },
+                navArgument(AppDestinations.ARG_NAME) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong(AppDestinations.ARG_ID) ?: 0L
+            val name = backStackEntry.arguments?.getString(AppDestinations.ARG_NAME) ?: ""
+            val decodedName = java.net.URLDecoder.decode(name, "UTF-8")
+
+            LocalDetailScreen(
+                title = decodedName,
+                type = LocalDetailViewModel.DetailType.ARTIST,
+                id = id,
+                playerViewModel = playerViewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onShowSongOptions = { song -> onShowSongOptions(song, null, null, null) },
                 bottomBarPadding = totalBottomPadding
             )
         }

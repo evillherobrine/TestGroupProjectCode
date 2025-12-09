@@ -1,6 +1,7 @@
 package com.example.musicplayer.ui.screen.component
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -45,6 +46,11 @@ fun MainScreen() {
     val density = LocalDensity.current
     val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = rememberStandardBottomSheetState(
         initialValue = SheetValue.PartiallyExpanded,skipHiddenState = true))
+    BackHandler(enabled = scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded) {
+        scope.launch {
+            scaffoldState.bottomSheetState.partialExpand()
+        }
+    }
     val hostState = remember { SnackbarHostState() }
     val showSnackbar: (String) -> Unit = { message ->
         scope.launch {
@@ -52,8 +58,6 @@ fun MainScreen() {
             hostState.showSnackbar(message)
         }
     }
-    var homeScrollTrigger by remember { mutableLongStateOf(0L) }
-    var libraryScrollTrigger by remember { mutableLongStateOf(0L) }
     val playerViewModel: PlayerViewModel = viewModel()
     val searchViewModel: SearchViewModel = viewModel()
     val playerState by playerViewModel.uiState.collectAsState()
@@ -66,6 +70,9 @@ fun MainScreen() {
     var selectedHistoryEntryId by remember { mutableStateOf<Long?>(null) }
     var selectedPlaylistId by remember { mutableStateOf<Long?>(null) }
     var onStartSelectionCallback by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var localScrollTrigger by remember { mutableLongStateOf(0L) }
+    var homeScrollTrigger by remember { mutableLongStateOf(0L) }
+    var libraryScrollTrigger by remember { mutableLongStateOf(0L) }
     if (showQueueBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = { showQueueBottomSheet = false },
@@ -153,6 +160,7 @@ fun MainScreen() {
                     searchViewModel = searchViewModel,
                     scrollToTopHome = homeScrollTrigger,
                     scrollToTopLibrary = libraryScrollTrigger,
+                    scrollToTopLocal = localScrollTrigger,
                     scrollToTopHistory = 0L
                 )
             }
@@ -173,6 +181,7 @@ fun MainScreen() {
 
                 val items = listOf(
                     NavItem(AppDestinations.HOME, Icons.Filled.Home, Icons.Outlined.Home, "Home") { homeScrollTrigger = System.currentTimeMillis() },
+                    NavItem(AppDestinations.LOCAL_MUSIC, Icons.Filled.Folder, Icons.Outlined.Folder, "Local") { localScrollTrigger = System.currentTimeMillis() },
                     NavItem(AppDestinations.LIBRARY, Icons.Filled.LibraryMusic, Icons.Outlined.LibraryMusic, "Library") { libraryScrollTrigger = System.currentTimeMillis() },
                 )
                 Row(
@@ -183,14 +192,36 @@ fun MainScreen() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     items.forEach { item ->
-                        val isSelected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                        val isSelected = currentDestination?.hierarchy?.any { destination ->
+                            if (item.route == AppDestinations.LOCAL_MUSIC) {
+                                destination.route == AppDestinations.LOCAL_MUSIC ||
+                                        destination.route?.startsWith(AppDestinations.LOCAL_ALBUM_DETAIL) == true ||
+                                        destination.route?.startsWith(AppDestinations.LOCAL_ARTIST_DETAIL) == true
+                            } else {
+                                destination.route == item.route
+                            }
+                        } == true
                         val contentColor = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                         Column(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxSize()
                                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                                    if (isSelected) item.onClickAction() else navController.navigate(item.route) { popUpTo(navController.graph.startDestinationId); launchSingleTop = true }
+                                    if (isSelected) {
+                                        if (currentDestination.route == item.route) {
+                                            item.onClickAction()
+                                        } else {
+                                            navController.navigate(item.route) {
+                                                popUpTo(item.route) { inclusive = true }
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                    } else {
+                                        navController.navigate(item.route) {
+                                            popUpTo(navController.graph.startDestinationId)
+                                            launchSingleTop = true
+                                        }
+                                    }
                                 },
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Bottom

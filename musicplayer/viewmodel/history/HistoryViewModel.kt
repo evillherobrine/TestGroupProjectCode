@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.local.history.HistoryEntry
-import com.example.musicplayer.data.repository.HistoryRepositoryImpl
+import com.example.musicplayer.data.repository.history.HistoryRepositoryImpl
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn

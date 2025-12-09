@@ -26,7 +26,7 @@ import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.ui.screen.search.TrackItem
 import com.example.musicplayer.viewmodel.playback.PlayerViewModel
 import com.example.musicplayer.viewmodel.playlist.FavoritesViewModel
-import com.example.musicplayer.viewmodel.playlist.LocalPlaylistViewModel
+import com.example.musicplayer.viewmodel.local.LocalPlaylistViewModel
 import kotlinx.coroutines.delay
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState

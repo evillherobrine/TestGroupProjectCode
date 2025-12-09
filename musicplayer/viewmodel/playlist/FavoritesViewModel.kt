@@ -3,7 +3,7 @@ package com.example.musicplayer.viewmodel.playlist
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.musicplayer.data.repository.FavoriteRepositoryImpl
+import com.example.musicplayer.data.repository.playlist.FavoriteRepositoryImpl
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.domain.usecase.FavoriteUseCase
 import kotlinx.coroutines.flow.SharingStarted

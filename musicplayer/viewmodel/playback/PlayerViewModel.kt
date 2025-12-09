@@ -5,8 +5,8 @@ import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
-import com.example.musicplayer.MusicService
-import com.example.musicplayer.data.repository.FavoriteRepositoryImpl
+import com.example.musicplayer.service.MusicService
+import com.example.musicplayer.data.repository.playlist.FavoriteRepositoryImpl
 import com.example.musicplayer.data.repository.QueueRepositoryImpl
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.domain.repository.MusicStateRepository
@@ -77,7 +77,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     currentSong = currentSong,
                     queue = queue,
                     currentIndex = currentIndex,
-                    sleepTimerInMillis = _uiState.value?.sleepTimerInMillis
+                    sleepTimerInMillis = _uiState.value.sleepTimerInMillis
                 )
             }.collect { newState ->
                 _uiState.value = newState
@@ -171,7 +171,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         startUiCountdown(durationMs)
     }
     fun addSleepTimerMinutes(minutes: Int) {
-        val currentRemaining = _uiState.value?.sleepTimerInMillis ?: 0L
+        val currentRemaining = _uiState.value.sleepTimerInMillis ?: 0L
         val newDuration = currentRemaining + (minutes * 60 * 1000L)
         setSleepTimer(newDuration)
     }

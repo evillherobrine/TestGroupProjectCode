@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.api.RetrofitClient
 import com.example.musicplayer.data.local.AppDatabase
-import com.example.musicplayer.data.repository.FavoriteRepositoryImpl
-import com.example.musicplayer.data.repository.UserPlaylistRepository
+import com.example.musicplayer.data.repository.playlist.FavoriteRepositoryImpl
+import com.example.musicplayer.data.repository.playlist.UserPlaylistRepository
 import com.example.musicplayer.domain.model.Playlist
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.domain.model.toSong
@@ -35,12 +35,6 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 coverUrl = favoriteSongs.firstOrNull()?.cover
             )
         }
-    private val localMusicItem = Playlist(
-        id = -2L,
-        name = "Local Music",
-        songCount = 0,
-        coverUrl = null
-    )
     private val userPlaylistsFlow = playlistDao.getAllPlaylistsWithSongsFlow()
         .map { playlistsWithSongs ->
             playlistsWithSongs.map {
@@ -56,7 +50,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         favoritesPlaylistFlow,
         userPlaylistsFlow
     ) { favorites, userPlaylists ->
-        listOf(favorites, localMusicItem) + userPlaylists
+        listOf(favorites) + userPlaylists
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

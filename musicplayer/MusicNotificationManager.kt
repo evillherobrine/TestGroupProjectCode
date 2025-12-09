@@ -15,6 +15,7 @@ import androidx.media3.common.util.UnstableApi
 import coil.imageLoader
 import coil.request.Disposable
 import coil.request.ImageRequest
+import com.example.musicplayer.service.MusicService
 import com.example.musicplayer.viewmodel.playback.MusicPlayer
 
 @UnstableApi

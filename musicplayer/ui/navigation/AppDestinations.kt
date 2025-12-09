@@ -12,4 +12,8 @@ object AppDestinations {
     const val ARG_PLAYLIST_NAME = "playlistName"
     const val HISTORY = "history"
     const val LOCAL_MUSIC = "local_music"
+    const val LOCAL_ALBUM_DETAIL = "local_album_detail"
+    const val LOCAL_ARTIST_DETAIL = "local_artist_detail"
+    const val ARG_ID = "id"
+    const val ARG_NAME = "name"
 }

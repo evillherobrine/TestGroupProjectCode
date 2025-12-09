@@ -1,4 +1,4 @@
-package com.example.musicplayer.data.repository
+package com.example.musicplayer.data.repository.local
 
 import android.content.ContentUris
 import android.content.Context

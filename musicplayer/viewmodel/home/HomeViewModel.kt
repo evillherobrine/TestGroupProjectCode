@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.api.BatchSearchRequest
 import com.example.musicplayer.data.api.RetrofitClient
-import com.example.musicplayer.data.repository.SearchHistoryRepository
+import com.example.musicplayer.data.repository.history.SearchHistoryRepository
 import com.example.musicplayer.domain.model.Playlist
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.domain.model.toPlaylist

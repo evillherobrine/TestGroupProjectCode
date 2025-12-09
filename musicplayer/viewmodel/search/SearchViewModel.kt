@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.example.musicplayer.data.repository.SearchHistoryRepository
+import com.example.musicplayer.data.repository.history.SearchHistoryRepository
 import com.example.musicplayer.data.repository.SearchRepositoryImpl
 import com.example.musicplayer.domain.model.Playlist
 import com.example.musicplayer.domain.model.Song
