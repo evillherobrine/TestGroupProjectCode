@@ -8,7 +8,7 @@ import kotlinx.coroutines.CancellationException
 
 object ApiHelper {
     private const val TAG = "ApiHelper"
-    suspend fun getPlayableUrl(song: Song): Song? {
+    suspend fun getPlayableSong(song: Song): Song? {
         try {
             val track = RetrofitClient.api.getTrackInfo(song.id)
             if (track.stream_url.isNotBlank()) {
@@ -19,8 +19,9 @@ object ApiHelper {
                     RetrofitClient.URL.trimEnd('/') + "/" + streamPath.removePrefix("/")
                 }
                 Log.d(TAG, "getPlayableUrl: Got PROXY stream URL: '$finalUrl'")
-                song.url = finalUrl
-                return song
+                return song.copy(
+                    url = finalUrl,
+                    lastFetchTime = System.currentTimeMillis())
             } else {
                 Log.d(TAG, "getPlayableUrl: no stream_url or empty for id=${song.id}")
                 return null

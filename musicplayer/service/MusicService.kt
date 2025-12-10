@@ -12,9 +12,9 @@ import androidx.media.MediaBrowserServiceCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.example.musicplayer.MusicNotificationManager
+import com.example.musicplayer.MusicPlayerApp
 import com.example.musicplayer.data.repository.playlist.FavoriteRepositoryImpl
 import com.example.musicplayer.data.repository.history.HistoryRepositoryImpl
-import com.example.musicplayer.data.repository.QueueRepositoryImpl
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.domain.repository.MusicStateRepository
 import com.example.musicplayer.viewmodel.playback.MusicPlayer
@@ -113,7 +113,7 @@ class MusicService : MediaBrowserServiceCompat() {
             NEXT -> handleNext()
             PREVIOUS -> handlePrevious()
             CLEAR_QUEUE -> {
-                QueueRepositoryImpl.clearQueue()
+                MusicPlayerApp.queueUseCase.clearQueue()
                 musicPlayer.stop()
                 sendBroadcast(Intent("QUEUE_CLEARED"))
             }
@@ -122,6 +122,7 @@ class MusicService : MediaBrowserServiceCompat() {
         }
         return START_NOT_STICKY
     }
+
     private fun setupPlayerListeners() {
         musicPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
@@ -146,12 +147,13 @@ class MusicService : MediaBrowserServiceCompat() {
             }
         })
     }
+
     internal fun playSong(song: Song) {
         targetSongId = song.id
         loadSongJob?.cancel()
         musicPlayer.stop()
         musicPlayer.clearMediaItems()
-        QueueRepositoryImpl.setCurrentSong(song)
+        MusicPlayerApp.queueUseCase.setCurrentSong(song)
         currentSongId = song.id
         currentTitle = song.title
         currentArtist = song.artist
@@ -160,7 +162,7 @@ class MusicService : MediaBrowserServiceCompat() {
         loadSongJob = serviceScope.launch {
             try {
                 val refreshedSong = withContext(Dispatchers.IO) {
-                    QueueRepositoryImpl.getPlayableSong(song)
+                    MusicPlayerApp.queueUseCase.getPlayableSong(song)
                 }
                 if (refreshedSong == null || refreshedSong.id != targetSongId || !isActive) return@launch
                 val currentUrl = refreshedSong.url
@@ -212,11 +214,11 @@ class MusicService : MediaBrowserServiceCompat() {
         }
     }
     private fun handleNext() {
-        val next = QueueRepositoryImpl.playNext()
+        val next = MusicPlayerApp.queueUseCase.playNext()
         next?.let { serviceScope.launch { playSong(it) } }
     }
     private fun handlePrevious() {
-        val prev = QueueRepositoryImpl.playPrevious()
+        val prev = MusicPlayerApp.queueUseCase.playPrevious()
         prev?.let { serviceScope.launch { playSong(it) } }
     }
     private fun handleSongEnded() {
@@ -225,13 +227,15 @@ class MusicService : MediaBrowserServiceCompat() {
                 musicPlayer.seekTo(0)
                 musicPlayer.togglePlayPause()
             } else {
-                val next = withContext(Dispatchers.IO) { QueueRepositoryImpl.playNext() }
+                val next = withContext(Dispatchers.IO) {
+                    MusicPlayerApp.queueUseCase.playNext()
+                }
                 if (next != null) playSong(next) else { musicPlayer.seekTo(0); musicPlayer.pause() }
             }
         }
     }
     private fun handleToggleFavorite() {
-        val song = QueueRepositoryImpl.currentSong.value ?: return
+        val song = MusicPlayerApp.queueUseCase.currentSong.value ?: return
         isCurrentSongFavorite = !isCurrentSongFavorite
         updateUIAndNotification()
         sendBroadcast(Intent("ACTION_FAVORITE_CHANGED").apply {
@@ -267,7 +271,7 @@ class MusicService : MediaBrowserServiceCompat() {
         seekbarJob = null
     }
     private fun saveCurrentState(song: Song? = null) {
-        val current = song ?: QueueRepositoryImpl.currentSong.value ?: return
+        val current = song ?: MusicPlayerApp.queueUseCase.currentSong.value ?: return
         playerPreferences.saveLastSong(current)
     }
     private fun restoreLastSession() {

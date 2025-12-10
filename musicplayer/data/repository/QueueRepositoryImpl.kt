@@ -1,9 +1,8 @@
 package com.example.musicplayer.data.repository
 
-import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.example.musicplayer.data.api.ApiHelper
-import com.example.musicplayer.data.local.AppDatabase
 import com.example.musicplayer.data.local.queue.QueueDao
 import com.example.musicplayer.data.local.queue.QueueEntry
 import com.example.musicplayer.domain.model.Song
@@ -11,22 +10,20 @@ import com.example.musicplayer.domain.repository.QueueRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import androidx.core.content.edit
 
-object QueueRepositoryImpl : QueueRepository {
-    private lateinit var queueDao: QueueDao
-    private lateinit var prefs: SharedPreferences
+class QueueRepositoryImpl(
+    private val queueDao: QueueDao,
+    private val prefs: SharedPreferences
+) : QueueRepository {
+    companion object {
+        private const val KEY_CURRENT_SONG_ID = "current_song_id"
+        private const val URL_EXPIRATION_MS = 3_600_000L
+    }
     private val _queue = MutableStateFlow<List<Song>>(emptyList())
     override val queue = _queue.asStateFlow()
     private val _currentSong = MutableStateFlow<Song?>(null)
     override val currentSong = _currentSong.asStateFlow()
     private var currentIndex = -1
-    private const val KEY_CURRENT_SONG_ID = "current_song_id"
-    private const val URL_EXPIRATION_MS = 3_600_000L
-    fun initialize(context: Context) {
-        queueDao = AppDatabase.getDatabase(context).queueDao()
-        prefs = context.getSharedPreferences("queue_prefs", Context.MODE_PRIVATE)
-    }
     suspend fun loadQueueFromDatabase() {
         val savedQueue = queueDao.getQueueFlow().first().map { it.toSong() }
         _queue.value = savedQueue
@@ -114,15 +111,13 @@ object QueueRepositoryImpl : QueueRepository {
         val isUrlInvalid = song.url.isBlank()
         val isUrlExpired = (currentTime - song.lastFetchTime) > URL_EXPIRATION_MS
         if (isUrlInvalid || isUrlExpired) {
-            val songWithNewUrl = ApiHelper.getPlayableUrl(song)
+            val songWithNewUrl = ApiHelper.getPlayableSong(song)
             if (songWithNewUrl != null) {
-                songWithNewUrl.lastFetchTime = currentTime
                 val currentQueue = _queue.value
                 val updatedQueue = currentQueue.map {
                     if (it.id == songWithNewUrl.id) songWithNewUrl else it
                 }
                 _queue.value = updatedQueue
-
                 return songWithNewUrl
             } else {
                 return null

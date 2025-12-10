@@ -1,11 +1,11 @@
 package com.example.musicplayer.domain.repository
 
 import com.example.musicplayer.domain.model.Song
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface QueueRepository {
-    val queue: Flow<List<Song>>
-    val currentSong: Flow<Song?>
+    val queue: StateFlow<List<Song>>
+    val currentSong: StateFlow<Song?>
     fun add(song: Song): Boolean
     fun remove(song: Song)
     fun playNext(): Song?

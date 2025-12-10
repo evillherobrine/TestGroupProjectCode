@@ -78,7 +78,6 @@ fun ApiPlaylistDetail(
                     LazyColumn(modifier = Modifier.fillMaxSize(),contentPadding = PaddingValues(bottom = bottomBarPadding)) {
                         items(
                             items = currentState.songs,
-                            key = { it.id }
                         ) { song ->
                             TrackItem(
                                 song = song,

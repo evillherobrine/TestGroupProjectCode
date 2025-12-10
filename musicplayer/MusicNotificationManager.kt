@@ -86,7 +86,6 @@ class MusicNotificationManager(private val service: MusicService, private val mu
             .addAction(R.drawable.skip_next_24px, "Next", nextIntent)
             .addAction(favoriteIcon, "Favorite", favoriteIntent)
         currentCoverBitmap?.let { builder.setLargeIcon(it) }
-
         return builder
     }
     fun buildNotification(mediaSession: MediaSessionCompat): Notification {

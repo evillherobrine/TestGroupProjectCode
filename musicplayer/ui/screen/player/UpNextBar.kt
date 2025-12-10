@@ -44,7 +44,7 @@ fun UpNextBar(
             Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = "Queue")
             Spacer(Modifier.width(16.dp))
             Text(
-                text = if (upNextSong.isNotEmpty()) "Up next: $upNextSong" else "Open Queue",
+                text = upNextSong.ifEmpty { "Open Queue" },
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

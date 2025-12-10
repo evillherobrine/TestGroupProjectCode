@@ -5,85 +5,97 @@ import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
-import com.example.musicplayer.service.MusicService
+import com.example.musicplayer.MusicPlayerApp
 import com.example.musicplayer.data.repository.playlist.FavoriteRepositoryImpl
-import com.example.musicplayer.data.repository.QueueRepositoryImpl
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.domain.repository.MusicStateRepository
+import com.example.musicplayer.service.MusicService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.CancellationException
 
 @UnstableApi
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
-    private val _uiState = MutableStateFlow(PlayerUiState())
-    val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
     private val favoriteRepository = FavoriteRepositoryImpl(application)
+    private val queueUseCase = MusicPlayerApp.queueUseCase
     private var playJob: Job? = null
     private var timerJob: Job? = null
-    private data class PlayerStatus(
+    private val _sleepTimerInMillis = MutableStateFlow<Long?>(null)
+    private data class PlayerMetadata(
         val isPlaying: Boolean,
         val isRepeating: Boolean,
-        val position: Long,
-        val duration: Long
-    )
-
-    init {
-        viewModelScope.launch {
-            val playerStatusFlow = combine(
-                MusicStateRepository.isPlaying,
-                MusicStateRepository.isRepeating,
-                MusicStateRepository.currentPosition,
-                MusicStateRepository.duration
-            ) { isPlaying, isRepeating, position, duration ->
-                PlayerStatus(isPlaying, isRepeating, position, duration)
-            }
-            combine(
-                playerStatusFlow,
-                QueueRepositoryImpl.currentSong,
-                QueueRepositoryImpl.queue,
-                favoriteRepository.favoriteSongs
-            ) { status, currentSong, queue, favorites ->
-                val (isPlaying, isRepeating, position, duration) = status
-                val isFavorite = currentSong?.let { song ->
-                    favorites.any { it.id == song.id }
-                } ?: false
-                val currentIndex = if (currentSong != null) {
-                    queue.indexOfFirst { it.id == currentSong.id }
-                } else -1
-                val nextSongTitle = if (currentIndex != -1 && currentIndex + 1 < queue.size) {
-                    queue[currentIndex + 1].title
-                } else {
-                    ""
-                }
-                PlayerUiState(
-                    isPlaying = isPlaying,
-                    isRepeating = isRepeating,
-                    title = currentSong?.title ?: "",
-                    artist = currentSong?.artist ?: "",
-                    coverUrl = currentSong?.cover ?: "",
-                    coverUrlXL = currentSong?.coverXL ?: "",
-                    position = position,
-                    duration = duration,
-                    isFavourite = isFavorite,
-                    upNextSong = nextSongTitle,
-                    currentSong = currentSong,
-                    queue = queue,
-                    currentIndex = currentIndex,
-                    sleepTimerInMillis = _uiState.value.sleepTimerInMillis
-                )
-            }.collect { newState ->
-                _uiState.value = newState
-            }
+        val currentSong: Song?,
+        val queue: List<Song>,
+        val isFavorite: Boolean,
+        val currentIndex: Int,
+        val upNextSong: String)
+    private val metadataFlow = combine(
+        MusicStateRepository.isPlaying,
+        MusicStateRepository.isRepeating,
+        queueUseCase.currentSong,
+        queueUseCase.queue,
+        favoriteRepository.favoriteSongs
+    ) { isPlaying, isRepeating, currentSong, queue, favorites ->
+        val isFavorite = currentSong?.let { song ->
+            favorites.any { it.id == song.id }
+        } ?: false
+        val currentIndex = if (currentSong != null) {
+            queue.indexOfFirst { it.id == currentSong.id }
+        } else -1
+        val nextSongTitle = if (currentIndex != -1 && currentIndex + 1 < queue.size) {
+            queue[currentIndex + 1].title
+        } else {
+            ""
         }
+        PlayerMetadata(
+            isPlaying = isPlaying,
+            isRepeating = isRepeating,
+            currentSong = currentSong,
+            queue = queue,
+            isFavorite = isFavorite,
+            currentIndex = currentIndex,
+            upNextSong = nextSongTitle
+        )
     }
+    private val progressFlow = combine(
+        MusicStateRepository.currentPosition,
+        MusicStateRepository.duration
+    ) { position, duration ->
+        Pair(position, duration)
+    }
+    val uiState: StateFlow<PlayerUiState> = combine(
+        metadataFlow,
+        progressFlow,
+        _sleepTimerInMillis
+    ) { metadata, progress, sleepTimer ->
+        PlayerUiState(
+            isPlaying = metadata.isPlaying,
+            isRepeating = metadata.isRepeating,
+            title = metadata.currentSong?.title ?: "",
+            artist = metadata.currentSong?.artist ?: "",
+            coverUrl = metadata.currentSong?.cover ?: "",
+            coverUrlXL = metadata.currentSong?.coverXL ?: "",
+            position = progress.first,
+            duration = progress.second,
+            isFavourite = metadata.isFavorite,
+            upNextSong = metadata.upNextSong,
+            currentSong = metadata.currentSong,
+            queue = metadata.queue,
+            currentIndex = metadata.currentIndex,
+            sleepTimerInMillis = sleepTimer
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = PlayerUiState()
+    )
     private fun sendMusicCommand(action: String, extras: Map<String, Any> = emptyMap()) {
         val context = getApplication<Application>()
         val intent = Intent(context, MusicService::class.java).apply {
@@ -98,16 +110,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
         context.startService(intent)
     }
-
     fun playSong(song: Song) {
         playJob?.cancel()
         playJob = viewModelScope.launch {
             try {
                 val songCopy = song.copy()
-                val playableSong = QueueRepositoryImpl.getPlayableSong(songCopy)
+                val playableSong = queueUseCase.getPlayableSong(songCopy)
                 if (playableSong != null && playableSong.url.isNotEmpty()) {
-                    QueueRepositoryImpl.add(playableSong)
-                    QueueRepositoryImpl.setCurrentSong(playableSong)
+                    queueUseCase.add(playableSong)
+                    queueUseCase.setCurrentSong(playableSong)
                     sendMusicCommand(MusicService.PLAY_URL, mapOf(
                         "URL" to playableSong.url,
                         "TITLE" to playableSong.title,
@@ -129,13 +140,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         playJob = viewModelScope.launch {
             try {
                 val songCopy = clickedSong.copy()
-                val playableSong = QueueRepositoryImpl.getPlayableSong(songCopy) ?: return@launch
-                QueueRepositoryImpl.clearQueue()
+                val playableSong = queueUseCase.getPlayableSong(songCopy) ?: return@launch
+                queueUseCase.clearQueue()
                 val songsToSave = songList.map { song ->
                     if (song.id == playableSong.id) playableSong else song
                 }
-                songsToSave.forEach { QueueRepositoryImpl.add(it) }
-                QueueRepositoryImpl.setCurrentSong(playableSong)
+                songsToSave.forEach { queueUseCase.add(it) }
+                queueUseCase.setCurrentSong(playableSong)
                 sendMusicCommand(MusicService.PLAY_URL, mapOf(
                     "URL" to playableSong.url,
                     "TITLE" to playableSong.title,
@@ -155,15 +166,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun toggleRepeat() = sendMusicCommand(MusicService.TOGGLE_REPEAT)
     fun toggleFavorite() = sendMusicCommand(MusicService.TOGGLE_FAVORITE_NOTIFICATION)
     fun nextSong() {
-        val nextSong = QueueRepositoryImpl.playNext()
+        val nextSong = queueUseCase.playNext()
         if (nextSong != null) playSong(nextSong)
     }
     fun prevSong() {
-        val prevSong = QueueRepositoryImpl.playPrevious()
+        val prevSong = queueUseCase.playPrevious()
         if (prevSong != null) playSong(prevSong)
     }
     fun seekTo(position: Long) {
-        _uiState.update { it.copy(position = position) }
         sendMusicCommand(MusicService.SEEK_TO, mapOf("SEEK_TO" to position))
     }
     fun setSleepTimer(durationMs: Long) {
@@ -171,14 +181,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         startUiCountdown(durationMs)
     }
     fun addSleepTimerMinutes(minutes: Int) {
-        val currentRemaining = _uiState.value.sleepTimerInMillis ?: 0L
+        val currentRemaining = _sleepTimerInMillis.value ?: 0L
         val newDuration = currentRemaining + (minutes * 60 * 1000L)
         setSleepTimer(newDuration)
     }
     private fun startUiCountdown(durationMs: Long) {
         timerJob?.cancel()
         if (durationMs <= 0) {
-            _uiState.update { it.copy(sleepTimerInMillis = null) }
+            _sleepTimerInMillis.value = null
             return
         }
         timerJob = viewModelScope.launch {
@@ -186,10 +196,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             while (isActive) {
                 val remaining = endTime - System.currentTimeMillis()
                 if (remaining <= 0) {
-                    _uiState.update { it.copy(sleepTimerInMillis = null) }
+                    _sleepTimerInMillis.value = null
                     break
                 }
-                _uiState.update { it.copy(sleepTimerInMillis = remaining) }
+                _sleepTimerInMillis.value = remaining
                 delay(1000)
             }
         }

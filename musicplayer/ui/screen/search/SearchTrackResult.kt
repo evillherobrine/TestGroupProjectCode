@@ -70,7 +70,6 @@ fun TrackResultScreen(
         ) {
             items(
                 count = lazyTrackItems.itemCount,
-                key = { index -> lazyTrackItems.peek(index)?.id ?: -1 }
             ) { index ->
                 lazyTrackItems[index]?.let { song ->
                     TrackItem(
