@@ -31,8 +31,8 @@ fun LargeCover(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(currentCoverUrlXL)
                 .crossfade(true)
-                .placeholder(R.drawable.image_24px)
-                .error(R.drawable.image_24px)
+                .placeholder(R.drawable.music_note)
+                .error(R.drawable.music_note)
                 .build(),
             contentDescription = "Album Cover",
             modifier = Modifier

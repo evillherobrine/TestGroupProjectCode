@@ -76,7 +76,7 @@ fun LocalAlbumsTab(
                                 .size(140.dp)
                                 .clip(RoundedCornerShape(8.dp)),
                             contentScale = ContentScale.Fit,
-                            error = painterResource(R.drawable.image_24px)
+                            error = painterResource(R.drawable.music_note)
                         )
                         Text(
                             text = album.name,

@@ -83,8 +83,8 @@ private fun MiniPlayerContent(title: String, artist: String, coverUrl: String) {
             model = ImageRequest.Builder(LocalContext.current)
                 .data(coverUrl)
                 .crossfade(true)
-                .placeholder(R.drawable.image_24px)
-                .error(R.drawable.image_24px)
+                .placeholder(R.drawable.music_note)
+                .error(R.drawable.music_note)
                 .build(),
             contentDescription = "Cover",
             modifier = Modifier.size(48.dp).clip(MaterialTheme.shapes.small),

@@ -116,8 +116,8 @@ fun TrackItem(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(song.cover)
                     .crossfade(true)
-                    .placeholder(R.drawable.image_24px)
-                    .error(R.drawable.image_24px)
+                    .placeholder(R.drawable.music_note)
+                    .error(R.drawable.music_note)
                     .build(),
                 contentDescription = "Song Cover",
                 modifier = Modifier

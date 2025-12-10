@@ -88,8 +88,8 @@ fun PlaylistGridItem(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(playlist.coverUrl)
                 .crossfade(true)
-                .placeholder(R.drawable.image_24px)
-                .error(R.drawable.image_24px)
+                .placeholder(R.drawable.music_note)
+                .error(R.drawable.music_note)
                 .build(),
             contentDescription = "Playlist Artwork",
             modifier = Modifier.size(120.dp).clip(RoundedCornerShape(4.dp)),
