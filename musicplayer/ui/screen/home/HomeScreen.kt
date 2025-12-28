@@ -146,8 +146,7 @@ fun HomeScreenComposable(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 20.dp),
-                                contentAlignment = Alignment.Center
+                                    .padding(top = 20.dp)
                             ) {
                                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
                             }
