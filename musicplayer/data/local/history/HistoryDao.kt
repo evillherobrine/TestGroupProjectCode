@@ -19,4 +19,15 @@ interface HistoryDao {
     suspend fun getMostRecentSongId(): Long?
     @Query("DELETE FROM listening_history")
     suspend fun clearAll()
+    @Query("""
+        SELECT * FROM listening_history 
+        WHERE id IN (
+            SELECT MAX(id) 
+            FROM listening_history 
+            GROUP BY songId
+        ) 
+        ORDER BY timestamp DESC 
+        LIMIT 20
+    """)
+    fun getHomeRecentSongs(): Flow<List<HistoryEntry>>
 }

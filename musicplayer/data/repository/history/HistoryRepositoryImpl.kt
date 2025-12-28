@@ -25,4 +25,7 @@ class HistoryRepositoryImpl(context: Context) {
     suspend fun clear() {
         historyDao.clearAll()
     }
+    fun getRecentForHome(): Flow<List<HistoryEntry>> {
+        return historyDao.getHomeRecentSongs()
+    }
 }
