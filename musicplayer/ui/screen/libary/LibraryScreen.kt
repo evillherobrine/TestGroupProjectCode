@@ -44,10 +44,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.musicplayer.R
 import com.example.musicplayer.domain.model.Playlist
 import com.example.musicplayer.ui.navigation.AppDestinations
 import com.example.musicplayer.ui.screen.component.PlaylistOptionsSheet
@@ -67,6 +71,14 @@ fun PlaylistScreenComposable(
     scrollToTop: Long,
     navController: NavController
 ) {
+    val customFontFamily = FontFamily(
+        Font(
+            resId = R.font.inter,
+            variationSettings = FontVariation.Settings(
+                FontVariation.weight(800)
+            )
+        )
+    )
     val context = LocalContext.current.applicationContext as Application
     val libraryViewModel: LibraryViewModel = viewModel(factory = LibraryViewModel.Factory(context))
     val playerViewModel: PlayerViewModel = viewModel()
@@ -242,7 +254,9 @@ fun PlaylistScreenComposable(
                     if (isSelectionMode) {
                         Text("${selectedPlaylistIds.size} Selected")
                     } else {
-                        Text("Library", style = MaterialTheme.typography.headlineSmall)
+                        Text("Library",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontFamily = customFontFamily)
                     }
                 },
                 navigationIcon = {

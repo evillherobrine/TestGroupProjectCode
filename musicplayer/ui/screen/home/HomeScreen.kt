@@ -28,6 +28,12 @@ import com.example.musicplayer.viewmodel.playlist.LibraryViewModel
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import com.example.musicplayer.R
+import androidx.compose.ui.text.font.FontVariation
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 @Suppress("AssignedValueIsNeverRead")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +48,22 @@ fun HomeScreenComposable(
     scrollToTop: Long,
     bottomPadding: Dp = 0.dp
 ) {
+    val customFontFamily = FontFamily(
+        Font(
+            resId = R.font.inter,
+            variationSettings = FontVariation.Settings(
+                FontVariation.weight(800)
+            )
+        )
+    )
+    val interMediumFontFamily = FontFamily(
+        Font(
+            resId = R.font.inter,
+            variationSettings = FontVariation.Settings(
+                FontVariation.weight(500)
+            )
+        )
+    )
     val context = LocalContext.current.applicationContext as Application
     val libraryViewModel: LibraryViewModel = viewModel(factory = LibraryViewModel.Factory(context))
     val queueViewModel: QueueViewModel = viewModel()
@@ -66,7 +88,8 @@ fun HomeScreenComposable(
                 title = {
                     Text(
                         text = "Home",
-                        style = MaterialTheme.typography.headlineSmall
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontFamily = customFontFamily
                     )
                 },
                 actions = {
@@ -99,7 +122,11 @@ fun HomeScreenComposable(
                         item {
                             Text(
                                 text = "Quick Play",
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontFamily = interMediumFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 18.sp
+                                ),
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                             )
                         }
@@ -115,7 +142,11 @@ fun HomeScreenComposable(
                         item {
                             Text(
                                 text = "Suggested Playlists",
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontFamily = interMediumFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 18.sp
+                                ),
                                 modifier = Modifier.padding(
                                     start = 16.dp,
                                     end = 16.dp,
