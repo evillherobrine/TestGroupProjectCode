@@ -1,5 +1,7 @@
 package com.example.musicplayer.data.local.history
 
+import android.content.ContentUris
+import android.provider.MediaStore
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.musicplayer.domain.model.Song
@@ -29,10 +31,18 @@ data class HistoryEntry(
         }
     }
     fun toSong(): Song {
+        val recoveredUrl = if (this.isLocal) {
+            ContentUris.withAppendedId(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                this.songId
+            ).toString()
+        } else {
+            ""
+        }
         return Song(
             id = this.songId,
             title = this.title,
-            url = "",
+            url = recoveredUrl,
             artist = this.artist,
             cover = this.cover,
             coverXL = this.cover?.replace("-large.jpg", "-t500x500.jpg"),
