@@ -102,7 +102,6 @@ fun AppNavHost(
                 ),
                 playerViewModel = playerViewModel,
                 navController = navController,
-                showSnackbar = onShowSnackbar,
                 scrollToTop = scrollToTopHome,
                 bottomPadding = totalBottomPadding
             )

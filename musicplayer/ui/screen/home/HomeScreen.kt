@@ -1,6 +1,5 @@
 package com.example.musicplayer.ui.screen.home
 
-import android.app.Application
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -10,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,7 +35,6 @@ fun HomeScreenComposable(
     playerViewModel: PlayerViewModel,
     homeViewModel: HomeViewModel = viewModel(),
     navController: NavController,
-    showSnackbar: (String) -> Unit,
     scrollToTop: Long,
     bottomPadding: Dp = 0.dp
 ) {

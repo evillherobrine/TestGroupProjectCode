@@ -29,5 +29,5 @@ interface HistoryDao {
         ORDER BY timestamp DESC 
         LIMIT 20
     """)
-    fun getHomeRecentSongs(): Flow<List<HistoryEntry>>
+    suspend fun getRecentSongs(): List<HistoryEntry>
 }

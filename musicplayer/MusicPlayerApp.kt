@@ -1,7 +1,6 @@
 package com.example.musicplayer
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -22,7 +21,7 @@ class MusicPlayerApp : Application(), DefaultLifecycleObserver {
     override fun onCreate() {
         super<Application>.onCreate()
         val database = AppDatabase.getDatabase(this)
-        val prefs = getSharedPreferences("queue_prefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("queue_prefs", MODE_PRIVATE)
         queueRepository = QueueRepositoryImpl(database.queueDao(), prefs)
         queueUseCase = QueueUseCase(queueRepository)
         appScope.launch {
