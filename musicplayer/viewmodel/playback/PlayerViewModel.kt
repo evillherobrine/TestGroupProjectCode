@@ -28,6 +28,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private var playJob: Job? = null
     private var timerJob: Job? = null
     private val _sleepTimerInMillis = MutableStateFlow<Long?>(null)
+    private val _isLoading = MutableStateFlow(false)
     private data class PlayerMetadata(
         val isPlaying: Boolean,
         val isRepeating: Boolean,
@@ -73,11 +74,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     val uiState: StateFlow<PlayerUiState> = combine(
         metadataFlow,
         progressFlow,
-        _sleepTimerInMillis
-    ) { metadata, progress, sleepTimer ->
+        _sleepTimerInMillis,
+        _isLoading
+    ) { metadata, progress, sleepTimer,isLoading ->
         PlayerUiState(
             isPlaying = metadata.isPlaying,
             isRepeating = metadata.isRepeating,
+            isLoading = isLoading,
             title = metadata.currentSong?.title ?: "",
             artist = metadata.currentSong?.artist ?: "",
             coverUrl = metadata.currentSong?.cover ?: "",
@@ -114,6 +117,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         playJob?.cancel()
         playJob = viewModelScope.launch {
             try {
+                _isLoading.value = true
+                if (MusicStateRepository.isPlaying.value) {
+                    sendMusicCommand(MusicService.TOGGLE_PLAY)}
                 val songCopy = song.copy()
                 val playableSong = queueUseCase.getPlayableSong(songCopy)
                 if (playableSong != null && playableSong.url.isNotEmpty()) {
@@ -132,6 +138,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -139,6 +147,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         playJob?.cancel()
         playJob = viewModelScope.launch {
             try {
+                _isLoading.value = true
+                if (MusicStateRepository.isPlaying.value) {
+                    sendMusicCommand(MusicService.TOGGLE_PLAY)
+                }
                 val songCopy = clickedSong.copy()
                 val playableSong = queueUseCase.getPlayableSong(songCopy) ?: return@launch
                 queueUseCase.clearQueue()
@@ -159,7 +171,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-            }
+            } finally {
+                _isLoading.value = false }
         }
     }
     fun togglePlayPause() = sendMusicCommand(MusicService.TOGGLE_PLAY)

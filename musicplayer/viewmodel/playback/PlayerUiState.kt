@@ -5,6 +5,7 @@ import com.example.musicplayer.domain.model.Song
 data class PlayerUiState(
     val isPlaying: Boolean = false,
     val isRepeating: Boolean = false,
+    val isLoading: Boolean = false,
     val title: String = "",
     val artist: String = "",
     val coverUrl: String = "",

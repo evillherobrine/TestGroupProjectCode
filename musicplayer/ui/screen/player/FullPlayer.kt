@@ -65,6 +65,7 @@ fun FullPlayer(
             )
             TrackControl(
                 isPlaying = state.isPlaying,
+                isLoading = state.isLoading,
                 isRepeating = state.isRepeating,
                 isFavourite = state.isFavourite,
                 onPlayPauseClick = onPlayPauseClick,

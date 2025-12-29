@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.RepeatOneOn
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun TrackControl(
     isPlaying: Boolean,
+    isLoading: Boolean,
     isRepeating: Boolean,
     isFavourite: Boolean,
     onPlayPauseClick: () -> Unit,
@@ -63,7 +65,7 @@ fun TrackControl(
             Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", Modifier.size(48.dp))
         }
         Surface(
-            onClick = onPlayPauseClick,
+            onClick = { if (!isLoading) onPlayPauseClick() },
             shape = CircleShape,
             color = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -71,19 +73,27 @@ fun TrackControl(
             shadowElevation = 6.dp
         ) {
             Box(contentAlignment = Alignment.Center) {
-                AnimatedContent(
-                    targetState = isPlaying,
-                    transitionSpec = {
-                        (scaleIn(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)))
-                            .togetherWith(scaleOut(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200)))
-                    },
-                    label = "PlayPauseAnimation"
-                ) { playing ->
-                    Icon(
-                        imageVector = if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = "Play/Pause",
-                        modifier = Modifier.size(40.dp)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 3.dp
                     )
+                } else {
+                    AnimatedContent(
+                        targetState = isPlaying,
+                        transitionSpec = {
+                            (scaleIn(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)))
+                                .togetherWith(scaleOut(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200)))
+                        },
+                        label = "PlayPauseAnimation"
+                    ) { playing ->
+                        Icon(
+                            imageVector = if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = "Play/Pause",
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
                 }
             }
         }

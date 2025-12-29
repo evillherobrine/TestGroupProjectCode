@@ -18,7 +18,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
@@ -91,7 +90,6 @@ fun LocalDetailScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = bottomBarPadding)
             ) {
-                // Detail Header
                 item {
                     Column(
                         modifier = Modifier
@@ -99,7 +97,6 @@ fun LocalDetailScreen(
                             .padding(vertical = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Cover Image / Icon
                         Box(
                             modifier = Modifier
                                 .size(200.dp)
@@ -140,10 +137,7 @@ fun LocalDetailScreen(
                                 }
                             }
                         }
-
                         Spacer(modifier = Modifier.height(24.dp))
-
-                        // Large Play Button
                         IconButton(
                             onClick = {
                                 if (pagingItems.itemCount > 0) {
@@ -162,8 +156,6 @@ fun LocalDetailScreen(
                         }
                     }
                 }
-
-                // Songs List
                 items(
                     count = pagingItems.itemCount,
                     key = pagingItems.itemKey { it.id },

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +58,18 @@ fun MiniPlayer(
             )
         }
         Spacer(Modifier.width(12.dp))
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier.size(48.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        } else {
         IconButton(onClick = onPlayPauseClick) {
             AnimatedContent(
                 targetState = state.isPlaying,
@@ -72,7 +85,7 @@ fun MiniPlayer(
                     modifier = Modifier.size(40.dp)
                 )
             }
-        }
+        }}
     }
 }
 
