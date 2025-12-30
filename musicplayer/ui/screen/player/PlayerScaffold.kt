@@ -69,6 +69,7 @@ fun PlayerScaffold(
         sheetShape = RectangleShape,
         sheetContainerColor = Color.Transparent,
         sheetPeekHeight = peekHeight,
+        sheetMaxWidth = Dp.Unspecified,
         sheetContent = {
             BackHandler(enabled = scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded) {
                 scope.launch { scaffoldState.bottomSheetState.partialExpand() }
