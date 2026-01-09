@@ -54,11 +54,11 @@ class NightModeManager {
     }
     fun toggle(): Boolean {
         isEnabled = !isEnabled
-        android.util.Log.d("NightMode", "Đã chuyển trạng thái thành: $isEnabled")
+        android.util.Log.d("NightMode", "NightMode: $isEnabled")
         try {
             dynamicsProcessing?.enabled = isEnabled
         } catch (e: Exception) {
-            android.util.Log.e("NightMode", "Lỗi khi bật Effect: ${e.message}")
+            android.util.Log.e("NightMode", "NightMode: ${e.message}")
         }
         return isEnabled
     }

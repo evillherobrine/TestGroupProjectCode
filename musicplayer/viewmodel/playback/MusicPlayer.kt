@@ -15,6 +15,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import com.example.musicplayer.audio.NightModeManager
 import com.example.musicplayer.cache.MusicCache
+import com.example.musicplayer.domain.model.RepeatMode
 
 @UnstableApi
 class MusicPlayer(context: Context) {
@@ -25,7 +26,6 @@ class MusicPlayer(context: Context) {
         .setCache(MusicCache.get(context))
         .setUpstreamDataSourceFactory(upstreamDataSourceFactory)
         .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
-
     internal val exoPlayer: ExoPlayer = ExoPlayer.Builder(context)
         .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(cacheDataSourceFactory))
         .setAudioAttributes(
@@ -42,8 +42,9 @@ class MusicPlayer(context: Context) {
     private var isNightModeInitialized = false
     val isPlaying: Boolean
         get() = exoPlayer.isPlaying
-    val isRepeating: Boolean
-        get() = exoPlayer.repeatMode == ExoPlayer.REPEAT_MODE_ONE
+    private var _repeatMode: RepeatMode = RepeatMode.OFF
+    val repeatMode: RepeatMode
+        get() = _repeatMode
     val currentPosition: Long
         get() = exoPlayer.currentPosition
     val duration: Long
@@ -52,7 +53,6 @@ class MusicPlayer(context: Context) {
         get() = exoPlayer.bufferedPosition
     val isNightModeEnabled: Boolean
         get() = nightModeManager.isNightModeEnabled()
-
     init {
         exoPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
@@ -88,8 +88,7 @@ class MusicPlayer(context: Context) {
         exoPlayer.prepare()
         if (isNightModeInitialized) {
             nightModeManager.updateAudioSession(exoPlayer.audioSessionId)
-        }
-    }
+        }}
     fun prepare(url: String) {
         stop()
         val uri = url.toUri()
@@ -105,15 +104,12 @@ class MusicPlayer(context: Context) {
         exoPlayer.playWhenReady = false
         exoPlayer.prepare()
     }
-
     fun isReady(): Boolean {
         return exoPlayer.playbackState != Player.STATE_IDLE
     }
-
     fun pause() {
         exoPlayer.pause()
     }
-
     fun togglePlayPause() {
         if (exoPlayer.isPlaying) {
             exoPlayer.pause()
@@ -121,36 +117,40 @@ class MusicPlayer(context: Context) {
             exoPlayer.play()
         }
     }
-
+    fun play() {
+        exoPlayer.play()
+    }
     fun seekTo(position: Long) {
         exoPlayer.seekTo(position)
     }
-
     fun toggleRepeatMode() {
-        exoPlayer.repeatMode =
-            if (exoPlayer.repeatMode == ExoPlayer.REPEAT_MODE_ONE)
-                ExoPlayer.REPEAT_MODE_OFF
-            else
-                ExoPlayer.REPEAT_MODE_ONE
-    }
-
+        _repeatMode = when (_repeatMode) {
+            RepeatMode.OFF -> RepeatMode.ALL
+            RepeatMode.ALL -> RepeatMode.ONE
+            RepeatMode.ONE -> RepeatMode.OFF
+        }
+        syncExoPlayerRepeatMode()}
+    private fun syncExoPlayerRepeatMode() {
+        exoPlayer.repeatMode = when (_repeatMode) {
+            RepeatMode.ONE -> ExoPlayer.REPEAT_MODE_ONE
+            RepeatMode.ALL -> ExoPlayer.REPEAT_MODE_OFF
+            RepeatMode.OFF -> ExoPlayer.REPEAT_MODE_OFF
+        }}
     fun turnOffRepeatOne() {
-        if (exoPlayer.repeatMode == ExoPlayer.REPEAT_MODE_ONE) {
-            exoPlayer.repeatMode = ExoPlayer.REPEAT_MODE_OFF
+        if (_repeatMode == RepeatMode.ONE) {
+            _repeatMode = RepeatMode.OFF
+            syncExoPlayerRepeatMode()
         }
     }
     fun setNightModeEnabled(enabled: Boolean) {
         if (!isNightModeInitialized) {
             initializeNightMode()
         }
-        nightModeManager.setEnabled(enabled)
-    }
+        nightModeManager.setEnabled(enabled)}
     fun toggleNightMode(): Boolean {
         if (!isNightModeInitialized) {
-            initializeNightMode()
-        }
-        return nightModeManager.toggle()
-    }
+            initializeNightMode()}
+        return nightModeManager.toggle()}
     fun addListener(listener: Player.Listener) {
         exoPlayer.addListener(listener)
     }

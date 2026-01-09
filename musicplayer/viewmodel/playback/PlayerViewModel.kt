@@ -7,11 +7,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import com.example.musicplayer.MusicPlayerApp
 import com.example.musicplayer.data.repository.playlist.FavoriteRepositoryImpl
+import com.example.musicplayer.domain.model.RepeatMode
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.domain.repository.MusicStateRepository
 import com.example.musicplayer.service.MusicService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.CancellationException
+
 @UnstableApi
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
     private val favoriteRepository = FavoriteRepositoryImpl(application)
@@ -31,7 +34,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private data class PlayerMetadata(
         val isPlaying: Boolean,
-        val isRepeating: Boolean,
+        val repeatMode: RepeatMode,
         val currentSong: Song?,
         val queue: List<Song>,
         val isFavorite: Boolean,
@@ -40,45 +43,46 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val isNightModeEnabled:  Boolean
     )
 
-    private val metadataFlow = combine(
-        MusicStateRepository.isPlaying,
-        MusicStateRepository.isRepeating,
-        queueUseCase.currentSong,
-        queueUseCase.queue,
-        favoriteRepository.favoriteSongs,
-        MusicStateRepository.isNightMode
-    ) { values ->
-        val isPlaying = values[0] as Boolean
-        val isRepeating = values[1] as Boolean
-        val currentSong = values[2] as Song?
-        @Suppress("UNCHECKED_CAST")
-        val queue = values[3] as List<Song>
-        @Suppress("UNCHECKED_CAST")
-        val favorites = values[4] as List<Song>
-        val isNightMode = values[5] as Boolean
+    private val metadataFlow: Flow<PlayerMetadata>
+        get() = combine(
+            MusicStateRepository.isPlaying,
+            MusicStateRepository.repeatMode,
+            queueUseCase.currentSong,
+            queueUseCase.queue,
+            favoriteRepository.favoriteSongs,
+            MusicStateRepository.isNightMode
+        ) { values ->
+            val isPlaying = values[0] as Boolean
+            val repeatMode = values[1] as RepeatMode
+            val currentSong = values[2] as Song?
+            @Suppress("UNCHECKED_CAST")
+            val queue = values[3] as List<Song>
+            @Suppress("UNCHECKED_CAST")
+            val favorites = values[4] as List<Song>
+            val isNightMode = values[5] as Boolean
 
-        val isFavorite = currentSong?.let { song ->
-            favorites.any { it.id == song.id }
-        } ?: false
-        val currentIndex = if (currentSong != null) {
-            queue.indexOfFirst { it.id == currentSong.id }
-        } else -1
-        val nextSongTitle = if (currentIndex != -1 && currentIndex + 1 < queue.size) {
-            queue[currentIndex + 1].title
-        } else {
-            ""
+            val isFavorite = currentSong?.let { song ->
+                favorites.any { it.id == song.id }
+            } ?: false
+            val currentIndex = if (currentSong != null) {
+                queue.indexOfFirst { it.id == currentSong.id }
+            } else -1
+            val nextSongTitle = if (currentIndex != -1 && currentIndex + 1 < queue.size) {
+                queue[currentIndex + 1].title
+            } else {
+                ""
+            }
+            PlayerMetadata(
+                isPlaying = isPlaying,
+                repeatMode = repeatMode,
+                currentSong = currentSong,
+                queue = queue,
+                isFavorite = isFavorite,
+                currentIndex = currentIndex,
+                upNextSong = nextSongTitle,
+                isNightModeEnabled = isNightMode
+            )
         }
-        PlayerMetadata(
-            isPlaying = isPlaying,
-            isRepeating = isRepeating,
-            currentSong = currentSong,
-            queue = queue,
-            isFavorite = isFavorite,
-            currentIndex = currentIndex,
-            upNextSong = nextSongTitle,
-            isNightModeEnabled = isNightMode
-        )
-    }
 
     private val progressFlow = combine(
         MusicStateRepository.currentPosition,
@@ -95,7 +99,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     ) { metadata, progress, sleepTimer, isLoading ->
         PlayerUiState(
             isPlaying = metadata.isPlaying,
-            isRepeating = metadata.isRepeating,
+            repeatMode = metadata.repeatMode,
             isLoading = isLoading,
             title = metadata.currentSong?.title ?: "",
             artist = metadata.currentSong?.artist ?:  "",

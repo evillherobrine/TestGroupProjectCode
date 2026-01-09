@@ -1,22 +1,23 @@
 package com.example.musicplayer.domain.repository
 
+import com.example.musicplayer.domain.model.RepeatMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 object MusicStateRepository {
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying = _isPlaying.asStateFlow()
-    private val _isRepeating = MutableStateFlow(false)
-    val isRepeating = _isRepeating.asStateFlow()
+    private val _repeatMode = MutableStateFlow(RepeatMode.OFF)
+    val repeatMode = _repeatMode.asStateFlow()
     private val _currentPosition = MutableStateFlow(0L)
     val currentPosition = _currentPosition.asStateFlow()
     private val _duration = MutableStateFlow(0L)
     val duration = _duration.asStateFlow()
     private val _isNightMode = MutableStateFlow(false)
     val isNightMode = _isNightMode.asStateFlow()
-    fun updatePlaybackState(isPlaying: Boolean, isRepeating:  Boolean) {
+    fun updatePlaybackState(isPlaying: Boolean, repeatMode: RepeatMode) {
         _isPlaying.value = isPlaying
-        _isRepeating.value = isRepeating
+        _repeatMode.value = repeatMode
     }
     fun updateProgress(position: Long, duration: Long) {
         _currentPosition.value = position

@@ -15,6 +15,7 @@ import com.example.musicplayer.MusicNotificationManager
 import com.example.musicplayer.MusicPlayerApp
 import com.example.musicplayer.data.repository.history.HistoryRepositoryImpl
 import com.example.musicplayer.data.repository.playlist.FavoriteRepositoryImpl
+import com.example.musicplayer.domain.model.RepeatMode
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.domain.repository.MusicStateRepository
 import com.example.musicplayer.viewmodel.playback.MusicPlayer
@@ -256,7 +257,8 @@ class MusicService : MediaBrowserServiceCompat() {
     }
     private fun handleSongEnded() {
         serviceScope.launch(Dispatchers.Main) {
-            if (musicPlayer.isRepeating) {
+            val currentMode = musicPlayer.repeatMode
+            if (currentMode == RepeatMode.ONE) {
                 val currentSong = MusicPlayerApp.queueUseCase.currentSong.value
                 if (currentSong != null) {
                     launch(Dispatchers.IO) {
@@ -264,13 +266,23 @@ class MusicService : MediaBrowserServiceCompat() {
                     }
                 }
                 musicPlayer.seekTo(0)
-                musicPlayer.togglePlayPause()
+                musicPlayer.play()
             } else {
                 val next = withContext(Dispatchers.IO) {
                     MusicPlayerApp.queueUseCase.playNext()
                 }
-                if (next != null) playSong(next) else {
-                    musicPlayer.seekTo(0); musicPlayer.pause()
+                if (next != null) {
+                    playSong(next)
+                } else {
+                    if (currentMode == RepeatMode.ALL) {
+                        val firstSong = MusicPlayerApp.queueUseCase.queue.value.firstOrNull()
+                        if (firstSong != null) {
+                            playSong(firstSong)
+                        }
+                    } else {
+                        musicPlayer.seekTo(0)
+                        musicPlayer.pause()
+                    }
                 }
             }
         }
@@ -289,18 +301,15 @@ class MusicService : MediaBrowserServiceCompat() {
         if (!::notificationManager.isInitialized) return
         notificationManager.updateNotification(mediaSession, isCurrentSongFavorite)
     }
-
     private fun updateUIAndNotification() {
         triggerNotificationUpdate()
         mediaSessionHandler.updatePlaybackState(isCurrentSongFavorite)
         notificationManager.updateMediaMetadata()
         sendProgressBroadcast()
     }
-
     internal fun sendProgressBroadcast() {
-        MusicStateRepository.updatePlaybackState(musicPlayer.isPlaying, musicPlayer.isRepeating)
+        MusicStateRepository.updatePlaybackState(musicPlayer.isPlaying, musicPlayer.repeatMode)
     }
-
     private fun startSeekbarUpdates() {
         if (seekbarJob?.isActive == true) return
         if (!isAppInForeground) return
@@ -311,7 +320,6 @@ class MusicService : MediaBrowserServiceCompat() {
             }
         }
     }
-
     private fun stopSeekbarUpdates() {
         seekbarJob?.cancel()
         seekbarJob = null

@@ -1,10 +1,11 @@
 package com.example.musicplayer.viewmodel.playback
 
+import com.example.musicplayer.domain.model.RepeatMode
 import com.example.musicplayer.domain.model.Song
 
 data class PlayerUiState(
     val isPlaying: Boolean = false,
-    val isRepeating: Boolean = false,
+    val repeatMode: RepeatMode = RepeatMode.OFF,
     val isLoading: Boolean = false,
     val title: String = "",
     val artist: String = "",

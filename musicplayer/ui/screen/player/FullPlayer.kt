@@ -1,3 +1,5 @@
+@file:Suppress("AssignedValueIsNeverRead")
+
 package com.example.musicplayer.ui.screen.player
 
 import android.content.res.Configuration
@@ -69,7 +71,6 @@ fun FullPlayer(
             onPlayPauseClick = onPlayPauseClick,
             onNextClick = onNextClick,
             onPrevClick = onPrevClick,
-            onSeek = onSeek,
             onToggleFavorite = onToggleFavorite,
             onToggleRepeat = onToggleRepeat,
             onShowQueue = onShowQueue,
@@ -104,7 +105,6 @@ private fun FullPlayerLandscape(
     onPlayPauseClick:  () -> Unit,
     onNextClick:  () -> Unit,
     onPrevClick: () -> Unit,
-    onSeek: (Long) -> Unit,
     onToggleFavorite: () -> Unit,
     onToggleRepeat: () -> Unit,
     onShowQueue: () -> Unit,
@@ -172,7 +172,7 @@ private fun FullPlayerLandscape(
             TrackControl(
                 isPlaying = state.isPlaying,
                 isLoading = state.isLoading,
-                isRepeating = state.isRepeating,
+                repeatMode = state.repeatMode,
                 isFavourite = state.isFavourite,
                 onPlayPauseClick = onPlayPauseClick,
                 onPrevClick = onPrevClick,
@@ -266,7 +266,7 @@ private fun FullPlayerPortrait(
             TrackControl(
                 isPlaying = state.isPlaying,
                 isLoading = state.isLoading,
-                isRepeating = state.isRepeating,
+                repeatMode = state.repeatMode,
                 isFavourite = state.isFavourite,
                 onPlayPauseClick = onPlayPauseClick,
                 onPrevClick = onPrevClick,

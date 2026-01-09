@@ -20,8 +20,8 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
-import androidx.compose.material.icons.filled.RepeatOneOn
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,12 +34,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.musicplayer.domain.model.RepeatMode
 
 @Composable
 fun TrackControl(
     isPlaying: Boolean,
     isLoading: Boolean,
-    isRepeating: Boolean,
+    repeatMode: RepeatMode,
     isFavourite: Boolean,
     onPlayPauseClick: () -> Unit,
     onPrevClick: () -> Unit,
@@ -55,12 +56,20 @@ fun TrackControl(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onToggleRepeat) {
+            val icon = when (repeatMode) {
+                RepeatMode.ONE -> Icons.Default.RepeatOne
+                RepeatMode.ALL -> Icons.Default.Repeat
+                RepeatMode.OFF -> Icons.Default.Repeat
+            }
+            val tint = when (repeatMode) {
+                RepeatMode.OFF -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                else -> MaterialTheme.colorScheme.primary
+            }
             Icon(
-                imageVector = if (isRepeating) Icons.Default.RepeatOneOn else Icons.Default.RepeatOne,
+                imageVector = icon,
                 contentDescription = "Repeat",
-                tint = if (isRepeating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(32.dp)
-            )
+                tint = tint,
+                modifier = Modifier.size(32.dp))
         }
         IconButton(onClick = onPrevClick) {
             Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", Modifier.size(48.dp))
