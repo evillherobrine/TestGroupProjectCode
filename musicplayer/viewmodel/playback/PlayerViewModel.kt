@@ -40,7 +40,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val isFavorite: Boolean,
         val currentIndex: Int,
         val upNextSong: String,
-        val isNightModeEnabled:  Boolean
+        val isNightModeEnabled:  Boolean,
+        val audioSessionId: Int
     )
 
     private val metadataFlow: Flow<PlayerMetadata>
@@ -50,7 +51,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             queueUseCase.currentSong,
             queueUseCase.queue,
             favoriteRepository.favoriteSongs,
-            MusicStateRepository.isNightMode
+            MusicStateRepository.isNightMode,
+            MusicStateRepository.audioSessionId
         ) { values ->
             val isPlaying = values[0] as Boolean
             val repeatMode = values[1] as RepeatMode
@@ -60,7 +62,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             @Suppress("UNCHECKED_CAST")
             val favorites = values[4] as List<Song>
             val isNightMode = values[5] as Boolean
-
+            val audioSessionId = values[6] as Int
             val isFavorite = currentSong?.let { song ->
                 favorites.any { it.id == song.id }
             } ?: false
@@ -80,7 +82,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 isFavorite = isFavorite,
                 currentIndex = currentIndex,
                 upNextSong = nextSongTitle,
-                isNightModeEnabled = isNightMode
+                isNightModeEnabled = isNightMode,
+                audioSessionId = audioSessionId
             )
         }
 
@@ -113,7 +116,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             queue = metadata.queue,
             currentIndex = metadata.currentIndex,
             sleepTimerInMillis = sleepTimer,
-            isNightModeEnabled = metadata.isNightModeEnabled
+            isNightModeEnabled = metadata.isNightModeEnabled,
+            audioSessionId = metadata.audioSessionId
         )
     }.stateIn(
         scope = viewModelScope,

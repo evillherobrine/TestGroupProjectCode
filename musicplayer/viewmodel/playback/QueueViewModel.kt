@@ -3,14 +3,15 @@ package com.example.musicplayer.viewmodel.playback
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.util.UnstableApi
 import com.example.musicplayer.MusicPlayerApp
 import com.example.musicplayer.domain.model.Song
-import com.example.musicplayer.domain.usecase.QueueUseCase
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@UnstableApi
 class QueueViewModel(application: Application) : AndroidViewModel(application) {
     private val queueUseCase = MusicPlayerApp.queueUseCase
     val queue: StateFlow<List<Song>> = queueUseCase.queue

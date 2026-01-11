@@ -2,7 +2,13 @@
 
 package com.example.musicplayer.ui.screen.player
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,11 +28,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
 import com.example.musicplayer.data.local.memory.SongMemory
+import com.example.musicplayer.ui.screen.component.AudioVisualizerView
 import com.example.musicplayer.viewmodel.memory.MemoryViewModel
 import com.example.musicplayer.viewmodel.playback.PlayerUiState
 import com.example.musicplayer.viewmodel.playback.PlayerViewModel
@@ -35,6 +44,7 @@ import com.example.musicplayer.viewmodel.playback.PlayerViewModel
 @Composable
 fun FullPlayer(
     state: PlayerUiState,
+    isExpanded: Boolean,
     memoryViewModel: MemoryViewModel = viewModel(),
     onPlayPauseClick: () -> Unit,
     onNextClick: () -> Unit,
@@ -48,7 +58,6 @@ fun FullPlayer(
 ) {
     val playerViewModel: PlayerViewModel = viewModel()
     val handleToggleNightMode = {
-        android.util.Log.d("FullPlayer", "User clicked Night Mode button")
         playerViewModel.toggleNightMode()
     }
     val currentMemory by memoryViewModel.currentMemory.collectAsState()
@@ -66,6 +75,7 @@ fun FullPlayer(
     if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
         FullPlayerLandscape(
             state = state,
+            isExpanded = isExpanded,
             currentMemory = currentMemory,
             onNoteClick = { showMemoryDialog = true },
             onPlayPauseClick = onPlayPauseClick,
@@ -81,6 +91,7 @@ fun FullPlayer(
     } else {
         FullPlayerPortrait(
             state = state,
+            isExpanded = isExpanded,
             currentMemory = currentMemory,
             onNoteClick = { showMemoryDialog = true },
             onPlayPauseClick = onPlayPauseClick,
@@ -100,6 +111,7 @@ fun FullPlayer(
 @Composable
 private fun FullPlayerLandscape(
     state: PlayerUiState,
+    isExpanded: Boolean,
     currentMemory: SongMemory?,
     onNoteClick: () -> Unit,
     onPlayPauseClick:  () -> Unit,
@@ -115,6 +127,17 @@ private fun FullPlayerLandscape(
     val displayTitle = state.title
     val displayArtist = state.artist
     val insets = WindowInsets.safeDrawing.asPaddingValues()
+    var showVisualizer by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            showVisualizer = true
+        } else {
+            Toast.makeText(context, "Need record permission for this feature.", Toast.LENGTH_SHORT).show()
+        }
+    }
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -127,10 +150,36 @@ private fun FullPlayerLandscape(
         Box(
             modifier = Modifier
                 .weight(0.45f)
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(12.dp))
+                .clickable {
+                    if (showVisualizer) {
+                        showVisualizer = false
+                    } else {
+                        val hasPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.RECORD_AUDIO
+                        ) == PackageManager.PERMISSION_GRANTED
+
+                        if (hasPermission) {
+                            showVisualizer = true
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        }
+                    }
+                },
             contentAlignment = Alignment.Center
         ) {
-            LargeCover(currentCoverUrlXL = state.coverUrlXL)
+            Crossfade(targetState = showVisualizer, label = "VisualizerSwitch") { showWave ->
+                if (showWave) {
+                    AudioVisualizerView(
+                        audioSessionId = state.audioSessionId,
+                        isExpanded = isExpanded
+                    )
+                } else {
+                    LargeCover(currentCoverUrlXL = state.coverUrlXL)
+                }
+            }
         }
         Column(
             modifier = Modifier
@@ -198,6 +247,7 @@ private fun FullPlayerLandscape(
 @Composable
 private fun FullPlayerPortrait(
     state: PlayerUiState,
+    isExpanded: Boolean,
     currentMemory: SongMemory?,
     onNoteClick: () -> Unit,
     onPlayPauseClick: () -> Unit,
@@ -214,6 +264,17 @@ private fun FullPlayerPortrait(
     val displayTitle = state.title
     val displayArtist = state.artist
     val topPadding = WindowInsets.systemBars.asPaddingValues().calculateTopPadding()
+    var showVisualizer by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            showVisualizer = true
+        } else {
+            Toast.makeText(context, "Need record permission for this feature.", Toast.LENGTH_SHORT).show()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -229,7 +290,42 @@ private fun FullPlayerPortrait(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceAround
         ) {
-            LargeCover(currentCoverUrlXL = state.coverUrlXL)
+            Box(
+                modifier = Modifier
+                    .size(300.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable {
+                        if (showVisualizer) {
+                            showVisualizer = false
+                        } else {
+                            val hasPermission = ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.RECORD_AUDIO
+                            ) == PackageManager.PERMISSION_GRANTED
+
+                            if (hasPermission) {
+                                showVisualizer = true
+                            } else {
+                                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                            }
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Crossfade(targetState = showVisualizer, label = "VisualizerSwitch") { showWave ->
+                    if (showWave) {
+                        AudioVisualizerView(
+                            audioSessionId = state.audioSessionId,
+                            isExpanded = isExpanded
+                        )
+                    } else {
+                        LargeCover(
+                            currentCoverUrlXL = state.coverUrlXL,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+            }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 TrackInfo(title = displayTitle, artist = displayArtist)
                 if (currentMemory != null) {
@@ -254,7 +350,7 @@ private fun FullPlayerPortrait(
                     }
                 } else {
                     TextButton(onClick = onNoteClick) {
-                        Text("✍️ Create Diary", style = MaterialTheme.typography.labelMedium)
+                        Text("✍️ What is on your mind?", style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }

@@ -53,6 +53,8 @@ class MusicPlayer(context: Context) {
         get() = exoPlayer.bufferedPosition
     val isNightModeEnabled: Boolean
         get() = nightModeManager.isNightModeEnabled()
+    val audioSessionId: Int
+        get() = exoPlayer.audioSessionId
     init {
         exoPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {

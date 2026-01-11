@@ -63,6 +63,7 @@ fun PlayerScaffold(
     val density = LocalDensity.current
     val systemNavBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val peekHeight = MiniPlayerHeight + bottomBarHeight + systemNavBarHeight
+    val isExpanded = scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -105,6 +106,7 @@ fun PlayerScaffold(
                     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
                         FullPlayer(
                             state = playerState,
+                            isExpanded = isExpanded,
                             onPlayPauseClick = onPlayPause,
                             onNextClick = onNext,
                             onPrevClick = onPrev,

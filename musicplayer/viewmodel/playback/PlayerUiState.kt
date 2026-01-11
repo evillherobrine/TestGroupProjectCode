@@ -19,5 +19,6 @@ data class PlayerUiState(
     val queue: List<Song> = emptyList(),
     val currentIndex: Int = -1,
     val sleepTimerInMillis: Long? = null,
-    val isNightModeEnabled: Boolean = false
+    val isNightModeEnabled: Boolean = false,
+    val audioSessionId: Int = 0,
 )

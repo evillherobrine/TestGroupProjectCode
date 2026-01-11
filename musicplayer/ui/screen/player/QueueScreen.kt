@@ -20,6 +20,7 @@ import androidx.media3.common.util.UnstableApi
 import com.example.musicplayer.R
 import com.example.musicplayer.domain.model.Song
 import com.example.musicplayer.ui.screen.search.TrackItem
+import com.example.musicplayer.ui.utils.ShakeDetector
 import com.example.musicplayer.viewmodel.playback.PlayerViewModel
 import com.example.musicplayer.viewmodel.playback.QueueViewModel
 import kotlinx.coroutines.delay
@@ -40,6 +41,20 @@ fun QueueScreen(
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
         queueViewModel.moveSongInQueue(from.index, to.index)
+    }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    ShakeDetector(
+        enabled = true,
+        threshold = 2.5f
+    ) {
+        queueViewModel.shuffle()
+        val vibrator = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            val vibratorManager = context.getSystemService(android.content.Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as android.os.Vibrator }
+        vibrator.vibrate(android.os.VibrationEffect.createOneShot(50, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
     }
     Column(
         modifier = Modifier

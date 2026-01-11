@@ -309,6 +309,7 @@ class MusicService : MediaBrowserServiceCompat() {
     }
     internal fun sendProgressBroadcast() {
         MusicStateRepository.updatePlaybackState(musicPlayer.isPlaying, musicPlayer.repeatMode)
+        MusicStateRepository.updateAudioSessionId(musicPlayer.audioSessionId)
     }
     private fun startSeekbarUpdates() {
         if (seekbarJob?.isActive == true) return

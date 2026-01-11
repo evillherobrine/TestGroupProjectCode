@@ -15,6 +15,8 @@ object MusicStateRepository {
     val duration = _duration.asStateFlow()
     private val _isNightMode = MutableStateFlow(false)
     val isNightMode = _isNightMode.asStateFlow()
+    private val _audioSessionId = MutableStateFlow(0)
+    val audioSessionId = _audioSessionId.asStateFlow()
     fun updatePlaybackState(isPlaying: Boolean, repeatMode: RepeatMode) {
         _isPlaying.value = isPlaying
         _repeatMode.value = repeatMode
@@ -25,5 +27,8 @@ object MusicStateRepository {
     }
     fun setNightMode(isActive: Boolean) {
         _isNightMode.value = isActive
+    }
+    fun updateAudioSessionId(id: Int) {
+        _audioSessionId.value = id
     }
 }
