@@ -110,10 +110,7 @@ fun InsightsScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         LargeCover(
-                            currentCoverUrlXL = topSong?.coverXL,
-                            modifier = Modifier
-                                .size(180.dp)
-                                .padding(bottom = 16.dp)
+                            currentCoverUrlXL = topSong?.coverXL
                         )
                         Text(
                             text = topSong?.title ?: "",

@@ -20,6 +20,9 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +41,13 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.musicplayer.ui.navigation.AppDestinations
 
+data class NavItem(
+    val route: String,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
+    val label: String,
+    val onClickAction: () -> Unit
+)
 @Composable
 fun NavigationBar(
     navController: NavController,
@@ -141,18 +151,117 @@ fun NavigationBar(
                         color = contentColor,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                        )
-                    )
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal))
                 }
             }
         }
     }
 }
-data class NavItem(
-    val route: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
-    val label: String,
-    val onClickAction: () -> Unit
-)
+
+@Composable
+fun NavigationRail(
+    navController: NavController,
+    modifier: Modifier = Modifier,
+    onHomeScroll: () -> Unit,
+    onLocalScroll: () -> Unit,
+    onLibraryScroll: () -> Unit
+) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    fun isSelected(route: String): Boolean {
+        return currentDestination?.hierarchy?.any { destination ->
+            if (route == AppDestinations.LOCAL_MUSIC) {
+                destination.route == AppDestinations.LOCAL_MUSIC ||
+                        destination.route?.startsWith(AppDestinations.LOCAL_ALBUM_DETAIL) == true ||
+                        destination.route?.startsWith(AppDestinations.LOCAL_ARTIST_DETAIL) == true ||
+                        destination.route?.startsWith(AppDestinations.LOCAL_FOLDER_DETAIL) == true
+            } else {
+                destination.route == route
+            }
+        } == true
+    }
+    NavigationRail(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ) {
+        Spacer(Modifier.weight(1f))
+        val isHomeSelected = isSelected(AppDestinations.HOME)
+        NavigationRailItem(
+            selected = isHomeSelected,
+            onClick = {
+                if (isHomeSelected) {
+                    if (currentDestination?.route == AppDestinations.HOME) onHomeScroll()
+                } else {
+                    navController.navigate(AppDestinations.HOME) {
+                        popUpTo(navController.graph.startDestinationId)
+                        launchSingleTop = true
+                    }
+                }
+            },
+            icon = {
+                Icon(
+                    if (isHomeSelected) Icons.Filled.Home else Icons.Outlined.Home,
+                    contentDescription = "Home"
+                )
+            },
+            label = { Text("Home") },
+            colors = NavigationRailItemDefaults.colors(
+                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        )
+        Spacer(Modifier.weight(1f))
+        val isLocalSelected = isSelected(AppDestinations.LOCAL_MUSIC)
+        NavigationRailItem(
+            selected = isLocalSelected,
+            onClick = {
+                if (isLocalSelected) {
+                    if (currentDestination?.route == AppDestinations.LOCAL_MUSIC) onLocalScroll()
+                } else {
+                    navController.navigate(AppDestinations.LOCAL_MUSIC) {
+                        popUpTo(navController.graph.startDestinationId)
+                        launchSingleTop = true
+                    }
+                }
+            },
+            icon = {
+                Icon(
+                    if (isLocalSelected) Icons.Filled.Folder else Icons.Outlined.Folder,
+                    contentDescription = "Local"
+                )
+            },
+            label = { Text("Local") },
+            colors = NavigationRailItemDefaults.colors(
+                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        )
+        Spacer(Modifier.weight(1f))
+        val isLibrarySelected = isSelected(AppDestinations.LIBRARY)
+        NavigationRailItem(
+            selected = isLibrarySelected,
+            onClick = {
+                if (isLibrarySelected) {
+                    if (currentDestination?.route == AppDestinations.LIBRARY) onLibraryScroll()
+                } else {
+                    navController.navigate(AppDestinations.LIBRARY) {
+                        popUpTo(navController.graph.startDestinationId)
+                        launchSingleTop = true
+                    }
+                }
+            },
+            icon = {
+                Icon(
+                    if (isLibrarySelected) Icons.Filled.LibraryMusic else Icons.Outlined.LibraryMusic,
+                    contentDescription = "Library"
+                )
+            },
+            label = { Text("Library") },
+            colors = NavigationRailItemDefaults.colors(
+                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer
+            ))
+        Spacer(Modifier.weight(1f))
+    }
+}

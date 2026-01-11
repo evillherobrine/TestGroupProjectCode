@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
 import com.example.musicplayer.data.local.memory.SongMemory
@@ -71,11 +75,25 @@ fun FullPlayer(
             onDelete = { memoryViewModel.deleteMemory(); showMemoryDialog = false }
         )
     }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var isAppInForeground by remember { mutableStateOf(true) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                isAppInForeground = false
+            } else if (event == Lifecycle.Event.ON_RESUME) {
+                isAppInForeground = true
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    val isVisualizerActive = isExpanded && isAppInForeground
     val configuration = LocalConfiguration.current
     if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
         FullPlayerLandscape(
             state = state,
-            isExpanded = isExpanded,
+            isExpanded = isVisualizerActive,
             currentMemory = currentMemory,
             onNoteClick = { showMemoryDialog = true },
             onPlayPauseClick = onPlayPauseClick,
@@ -91,7 +109,7 @@ fun FullPlayer(
     } else {
         FullPlayerPortrait(
             state = state,
-            isExpanded = isExpanded,
+            isExpanded = isVisualizerActive,
             currentMemory = currentMemory,
             onNoteClick = { showMemoryDialog = true },
             onPlayPauseClick = onPlayPauseClick,
@@ -151,7 +169,6 @@ private fun FullPlayerLandscape(
             modifier = Modifier
                 .weight(0.45f)
                 .fillMaxHeight()
-                .clip(RoundedCornerShape(12.dp))
                 .clickable {
                     if (showVisualizer) {
                         showVisualizer = false
@@ -292,8 +309,8 @@ private fun FullPlayerPortrait(
         ) {
             Box(
                 modifier = Modifier
-                    .size(300.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .fillMaxWidth(0.85f)
+                    .aspectRatio(1f)
                     .clickable {
                         if (showVisualizer) {
                             showVisualizer = false
@@ -320,8 +337,7 @@ private fun FullPlayerPortrait(
                         )
                     } else {
                         LargeCover(
-                            currentCoverUrlXL = state.coverUrlXL,
-                            modifier = Modifier.fillMaxSize()
+                            currentCoverUrlXL = state.coverUrlXL
                         )
                     }
                 }
