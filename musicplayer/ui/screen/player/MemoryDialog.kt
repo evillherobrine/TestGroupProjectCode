@@ -89,7 +89,7 @@ fun MemoryDialog(
                 ) {
                     if (initialNote.isNotEmpty()) {
                         TextButton(onClick = onDelete, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
-                            Text("Xóa")
+                            Text("Delete")
                         }
                     }
                     Spacer(modifier = Modifier.width(8.dp))

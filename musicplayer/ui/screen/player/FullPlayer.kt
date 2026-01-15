@@ -99,6 +99,7 @@ fun FullPlayer(
             onPlayPauseClick = onPlayPauseClick,
             onNextClick = onNextClick,
             onPrevClick = onPrevClick,
+            onSeek = onSeek,
             onToggleFavorite = onToggleFavorite,
             onToggleRepeat = onToggleRepeat,
             onShowQueue = onShowQueue,
@@ -135,6 +136,7 @@ private fun FullPlayerLandscape(
     onPlayPauseClick:  () -> Unit,
     onNextClick:  () -> Unit,
     onPrevClick: () -> Unit,
+    onSeek:  (Long) -> Unit,
     onToggleFavorite: () -> Unit,
     onToggleRepeat: () -> Unit,
     onShowQueue: () -> Unit,
@@ -235,6 +237,10 @@ private fun FullPlayerLandscape(
                     }
                 }
             }
+            Progress(
+                position = state.position,
+                duration = state.duration,
+                onSeek = onSeek)
             TrackControl(
                 isPlaying = state.isPlaying,
                 isLoading = state.isLoading,

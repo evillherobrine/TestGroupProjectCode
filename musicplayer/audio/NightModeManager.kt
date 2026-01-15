@@ -9,9 +9,10 @@ class NightModeManager {
         if (audioSessionId == 0) return
         try {
             release()
+            val channelCount = 2
             val config = DynamicsProcessing.Config.Builder(
                 DynamicsProcessing.VARIANT_FAVOR_FREQUENCY_RESOLUTION,
-                1,
+                channelCount,
                 true,
                 1,
                 true,
@@ -21,29 +22,30 @@ class NightModeManager {
                 true
             ).build()
             dynamicsProcessing = DynamicsProcessing(0, audioSessionId, config).apply {
-                val mbcBand = getMbcBandByChannelIndex(0, 0)
-                mbcBand.apply {
-                    threshold = -30f
-                    ratio = 4f
-                    attackTime = 5f
-                    releaseTime = 100f
-                    kneeWidth = 10f
-                    noiseGateThreshold = -60f
-                    postGain = 6f
-                    isEnabled = true }
-                setMbcBandByChannelIndex(0, 0, mbcBand)
-                val limiter = getLimiterByChannelIndex(0)
-                limiter.apply {
-                    isEnabled = true
-                    linkGroup = 0
-                    attackTime = 1f
-                    releaseTime = 50f
-                    ratio = 10f
-                    threshold = -1f
-                    postGain = 0f}
-                setLimiterByChannelIndex(0, limiter)
+                for (i in 0 until channelCount) {
+                    val mbcBand = getMbcBandByChannelIndex(i, 0)
+                    mbcBand.apply {
+                        isEnabled = true
+                        threshold = -30f
+                        ratio = 4f
+                        attackTime = 10f
+                        releaseTime = 200f
+                        kneeWidth = 15f
+                        noiseGateThreshold = -70f
+                        postGain = 5f }
+                    setMbcBandByChannelIndex(i, 0, mbcBand)
+                    val limiter = getLimiterByChannelIndex(i)
+                    limiter.apply {
+                        isEnabled = true
+                        linkGroup = 0
+                        attackTime = 1f
+                        releaseTime = 60f
+                        ratio = 10f
+                        threshold = -1f
+                        postGain = 0f }
+                    setLimiterByChannelIndex(i, limiter) }
             }
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
             dynamicsProcessing = null
         }
