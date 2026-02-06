@@ -33,7 +33,7 @@ import com.example.musicplayer.domain.model.Song
         SongMemory::class
     ],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun favouriteDao(): FavouriteDao

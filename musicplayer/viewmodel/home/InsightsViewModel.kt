@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.data.local.AppDatabase
+import com.example.musicplayer.data.repository.history.HistoryRepositoryImpl
 import com.example.musicplayer.domain.model.Song
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,6 +34,7 @@ class InsightsViewModel(application: Application) : AndroidViewModel(application
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, null)
     private val _weeklyActivity = MutableStateFlow<Map<String, Int>>(emptyMap())
+    private val historyRepository = HistoryRepositoryImpl(application)
     val weeklyActivity: StateFlow<Map<String, Int>> = _weeklyActivity.asStateFlow()
     private val _userPersona = MutableStateFlow("Music Fan" to "🎵")
     val userPersona: StateFlow<Pair<String, String>> = _userPersona.asStateFlow()
@@ -58,21 +60,7 @@ class InsightsViewModel(application: Application) : AndroidViewModel(application
                 activityMap[dayName] = (activityMap[dayName] ?: 0) + 1
             }
             _weeklyActivity.value = activityMap
-            if (recentHistory.isNotEmpty()) {
-                val hourCounts = recentHistory.groupingBy {
-                    val c = Calendar.getInstance()
-                    c.timeInMillis = it.timestamp
-                    c.get(Calendar.HOUR_OF_DAY)
-                }.eachCount()
-                val maxHour = hourCounts.maxByOrNull { it.value }?.key ?: 12
-                val (title, icon) = when (maxHour) {
-                    in 5..11 -> "Early Bird" to "🌅"
-                    in 12..17 -> "Daydreamer" to "☀️"
-                    in 18..22 -> "Night Owl" to "🦉"
-                    else -> "After Dark" to "🌃"
-                }
-                _userPersona.value = title to icon
-            }
+            _userPersona.value = historyRepository.getUserPersona()
         }
     }
     private fun formatDuration(millis: Long): String {

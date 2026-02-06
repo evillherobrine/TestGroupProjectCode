@@ -15,6 +15,8 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val historyRepository = HistoryRepositoryImpl(application)
+    private val _userPersona = MutableStateFlow<Pair<String, String>?>(null)
+    val userPersona: StateFlow<Pair<String, String>?> = _userPersona.asStateFlow()
     private val api = RetrofitClient.api
     private val _recentSongs = MutableStateFlow<List<Song>>(emptyList())
     val recentSongs: StateFlow<List<Song>> = _recentSongs.asStateFlow()
@@ -24,6 +26,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     init {
         loadHomeContent()
+        calculateUserPersona()
+    }
+    private fun calculateUserPersona() {
+        viewModelScope.launch {
+            _userPersona.value = historyRepository.getUserPersona()
+        }
     }
     private fun loadHomeContent() {
         viewModelScope.launch {
